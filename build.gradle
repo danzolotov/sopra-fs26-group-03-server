@@ -57,6 +57,7 @@ bootJar {
 sonar {
   properties {
     property "sonar.projectKey", "danzolotov_sopra-fs26-group-03-server"
+    property "sonar.projectName", "sopra-fs26-group-03-server"
     property "sonar.organization", "danzolotov"
   }
 }
