@@ -70,6 +70,18 @@ public class UserService {
 		return userRepository.findByToken(token);
 	}
 
+	public void logoutUser(String token) {
+		User user = userRepository.findByToken(token);
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid authentication token");
+		}
+
+		user.setStatus(UserStatus.OFFLINE);
+		user.setToken(UUID.randomUUID().toString());
+		userRepository.save(user);
+		userRepository.flush();
+	}
+
 	/**
 	 * This is a helper method that will check the uniqueness criteria of the
 	 * username and email defined in the User entity. The method will do nothing
