@@ -34,10 +34,10 @@ public class UserServiceTest {
 		MockitoAnnotations.openMocks(this);
 
 		testUser = new User();
-		testUser.setId(1L);
+		testUser.setUserID("1");
 		testUser.setEmail("test@example.com");
 		testUser.setUsername("testUsername");
-		testUser.setPassword("secret");
+		testUser.setPasswordHash("secret");
 
 		Mockito.when(passwordEncoder.encode("secret")).thenReturn("hashed-secret");
 		Mockito.when(userRepository.save(Mockito.any())).thenAnswer(invocation -> invocation.getArgument(0));
@@ -50,7 +50,7 @@ public class UserServiceTest {
 		Mockito.verify(userRepository, Mockito.times(1)).save(Mockito.any());
 		assertEquals(testUser.getEmail(), createdUser.getEmail());
 		assertEquals(testUser.getUsername(), createdUser.getUsername());
-		assertEquals("hashed-secret", createdUser.getPassword());
+		assertEquals("hashed-secret", createdUser.getPasswordHash());
 		assertNotNull(createdUser.getToken());
 		assertEquals(UserStatus.OFFLINE, createdUser.getStatus());
 	}
@@ -76,8 +76,9 @@ public class UserServiceTest {
 	@Test
 	public void loginUser_validCredentials_success() {
 		User persistedUser = new User();
+		persistedUser.setEmail("test@example.com");
 		persistedUser.setUsername("testUsername");
-		persistedUser.setPassword("hashed-secret");
+		persistedUser.setPasswordHash("hashed-secret");
 		persistedUser.setStatus(UserStatus.OFFLINE);
 		persistedUser.setToken("old-token");
 
@@ -95,8 +96,9 @@ public class UserServiceTest {
 	@Test
 	public void loginUser_invalidPassword_throwsUnauthorized() {
 		User persistedUser = new User();
+		persistedUser.setEmail("test@example.com");
 		persistedUser.setUsername("testUsername");
-		persistedUser.setPassword("hashed-secret");
+		persistedUser.setPasswordHash("hashed-secret");
 
 		Mockito.when(userRepository.findByUsername("testUsername")).thenReturn(persistedUser);
 		Mockito.when(passwordEncoder.matches("wrong", "hashed-secret")).thenReturn(false);
@@ -104,5 +106,58 @@ public class UserServiceTest {
 		ResponseStatusException exception = assertThrows(ResponseStatusException.class,
 				() -> userService.loginUser("testUsername", "wrong"));
 		assertEquals(HttpStatus.UNAUTHORIZED, exception.getStatusCode());
+	}
+
+	@Test
+	public void updateUserById_validInput_updatesAllProvidedFields() {
+		User persistedUser = new User();
+		persistedUser.setUserID("1");
+		persistedUser.setEmail("old@example.com");
+		persistedUser.setUsername("old-username");
+		persistedUser.setPasswordHash("old-hash");
+		persistedUser.setBio("old bio");
+		persistedUser.setStatus(UserStatus.OFFLINE);
+
+		User userUpdates = new User();
+		userUpdates.setEmail("new@example.com");
+		userUpdates.setUsername("new-username");
+		userUpdates.setPasswordHash("new-password");
+		userUpdates.setBio("new bio");
+		userUpdates.setStatus(UserStatus.ONLINE);
+
+		Mockito.when(userRepository.findByUserID("1")).thenReturn(persistedUser);
+		Mockito.when(userRepository.findByEmail("new@example.com")).thenReturn(null);
+		Mockito.when(userRepository.findByUsername("new-username")).thenReturn(null);
+		Mockito.when(passwordEncoder.encode("new-password")).thenReturn("new-hash");
+		Mockito.when(userRepository.save(Mockito.any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+		User updatedUser = userService.updateUserById("1", userUpdates);
+
+		assertEquals("new@example.com", updatedUser.getEmail());
+		assertEquals("new-username", updatedUser.getUsername());
+		assertEquals("new-hash", updatedUser.getPasswordHash());
+		assertEquals("new bio", updatedUser.getBio());
+		assertEquals(UserStatus.ONLINE, updatedUser.getStatus());
+	}
+
+	@Test
+	public void updateUserById_duplicateEmail_throwsConflict() {
+		User persistedUser = new User();
+		persistedUser.setUserID("1");
+		persistedUser.setEmail("old@example.com");
+
+		User userUpdates = new User();
+		userUpdates.setEmail("new@example.com");
+
+		User emailOwner = new User();
+		emailOwner.setUserID("2");
+		emailOwner.setEmail("new@example.com");
+
+		Mockito.when(userRepository.findByUserID("1")).thenReturn(persistedUser);
+		Mockito.when(userRepository.findByEmail("new@example.com")).thenReturn(emailOwner);
+
+		ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+				() -> userService.updateUserById("1", userUpdates));
+		assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
 	}
 }

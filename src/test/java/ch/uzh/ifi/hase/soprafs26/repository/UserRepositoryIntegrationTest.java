@@ -27,14 +27,14 @@ public class UserRepositoryIntegrationTest {
 		user.setUsername("firstname@lastname");
 		user.setStatus(UserStatus.OFFLINE);
 		user.setToken("1");
-		user.setPassword("secret");
+		user.setPasswordHash("secret");
 
 		entityManager.persist(user);
 		entityManager.flush();
 
 		User found = userRepository.findByEmail(user.getEmail());
 
-		assertNotNull(found.getId());
+		assertNotNull(found.getUserID());
 		assertEquals(found.getEmail(), user.getEmail());
 		assertEquals(found.getUsername(), user.getUsername());
 		assertEquals(found.getToken(), user.getToken());

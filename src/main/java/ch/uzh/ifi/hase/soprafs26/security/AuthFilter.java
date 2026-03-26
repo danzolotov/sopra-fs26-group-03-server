@@ -17,13 +17,13 @@ import java.io.IOException;
 import java.util.Collections;
 
 @Component
-public class BearerTokenAuthFilter extends OncePerRequestFilter {
+public class AuthFilter extends OncePerRequestFilter {
 
     private static final String AUTH_COOKIE_NAME = "AUTH_TOKEN";
 
     private final UserService userService;
 
-    public BearerTokenAuthFilter(UserService userService) {
+    public AuthFilter(UserService userService) {
         this.userService = userService;
     }
 
@@ -37,7 +37,7 @@ public class BearerTokenAuthFilter extends OncePerRequestFilter {
 
             if (user != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        user.getUsername(), null, Collections.emptyList());
+                        user.getUserID(), null, Collections.emptyList());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }

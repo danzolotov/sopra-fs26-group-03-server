@@ -4,29 +4,38 @@ import org.junit.jupiter.api.Test;
 
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.LoginGetDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.LoginPostDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.RegisterPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-/**
- * DTOMapperTest
- * Tests if the mapping between the internal and the external/API representation
- * works.
- */
 public class DTOMapperTest {
 	@Test
 	public void testCreateUser_fromUserPostDTO_toUser_success() {
-		UserPostDTO userPostDTO = new UserPostDTO();
-		userPostDTO.setEmail("name@example.com");
-		userPostDTO.setUsername("username");
-		userPostDTO.setPassword("secret");
+		RegisterPostDTO registerPostDTO = new RegisterPostDTO();
+		registerPostDTO.setEmail("name@example.com");
+		registerPostDTO.setUsername("username");
+		registerPostDTO.setPassword("secret");
 
-		User user = DTOMapper.INSTANCE.convertUserPostDTOtoEntity(userPostDTO);
+		User user = DTOMapper.INSTANCE.convertRegisterPostDTOtoEntity(registerPostDTO);
 
-		assertEquals(userPostDTO.getEmail(), user.getEmail());
-		assertEquals(userPostDTO.getUsername(), user.getUsername());
-		assertEquals(userPostDTO.getPassword(), user.getPassword());
+		assertEquals(registerPostDTO.getEmail(), user.getEmail());
+		assertEquals(registerPostDTO.getUsername(), user.getUsername());
+		assertEquals(registerPostDTO.getPassword(), user.getPasswordHash());
+	}
+
+	@Test
+	public void testCreateLoginUser_fromLoginPostDTO_toUser_success() {
+		LoginPostDTO loginPostDTO = new LoginPostDTO();
+		loginPostDTO.setUsername("username");
+		loginPostDTO.setPassword("secret");
+
+		User user = DTOMapper.INSTANCE.convertLoginPostDTOtoEntity(loginPostDTO);
+
+		assertEquals(loginPostDTO.getUsername(), user.getUsername());
+		assertEquals(loginPostDTO.getPassword(), user.getPasswordHash());
 	}
 
 	@Test
@@ -36,14 +45,25 @@ public class DTOMapperTest {
 		user.setUsername("firstname@lastname");
 		user.setStatus(UserStatus.OFFLINE);
 		user.setToken("1");
-		user.setPassword("secret");
+		user.setPasswordHash("secret");
 
 		UserGetDTO userGetDTO = DTOMapper.INSTANCE.convertEntityToUserGetDTO(user);
 
-		assertEquals(user.getId(), userGetDTO.getId());
+		assertEquals(user.getUserID(), userGetDTO.getUserID());
 		assertEquals(user.getEmail(), userGetDTO.getEmail());
 		assertEquals(user.getUsername(), userGetDTO.getUsername());
-		assertEquals(user.getToken(), userGetDTO.getToken());
 		assertEquals(user.getStatus(), userGetDTO.getStatus());
+	}
+
+	@Test
+	public void testGetLoginResponse_fromUser_toLoginGetDTO_success() {
+		User user = new User();
+		user.setUserID("user-1");
+		user.setToken("login-token");
+
+		LoginGetDTO loginGetDTO = DTOMapper.INSTANCE.convertEntityToLoginGetDTO(user);
+
+		assertEquals(user.getUserID(), loginGetDTO.getUserID());
+		assertEquals(user.getToken(), loginGetDTO.getToken());
 	}
 }

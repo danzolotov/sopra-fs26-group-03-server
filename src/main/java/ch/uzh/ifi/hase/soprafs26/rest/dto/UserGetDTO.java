@@ -4,18 +4,19 @@ import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 
 public class UserGetDTO {
 
-	private Long id;
+	private String userID;
 	private String email;
 	private String username;
-	private String token;
+	private String bio;
+	private byte[] profilePicture;
 	private UserStatus status;
 
-	public Long getId() {
-		return id;
+	public String getUserID() {
+		return userID;
 	}
 
-	public void setId(Long id) {
-		this.id = id;
+	public void setUserID(String userID) {
+		this.userID = userID;
 	}
 
 	public String getEmail() {
@@ -34,12 +35,20 @@ public class UserGetDTO {
 		this.username = username;
 	}
 
-	public String getToken() {
-		return token;
+	public String getBio() {
+		return bio;
 	}
 
-	public void setToken(String token) {
-		this.token = token;
+	public void setBio(String bio) {
+		this.bio = bio;
+	}
+
+	public byte[] getProfilePicture() {
+		return profilePicture;
+	}
+
+	public void setProfilePicture(byte[] profilePicture) {
+		this.profilePicture = profilePicture;
 	}
 
 	public UserStatus getStatus() {

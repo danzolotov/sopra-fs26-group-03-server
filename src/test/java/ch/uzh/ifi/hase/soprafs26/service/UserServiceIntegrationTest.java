@@ -42,11 +42,11 @@ public class UserServiceIntegrationTest {
 		User testUser = new User();
 		testUser.setEmail("test@example.com");
 		testUser.setUsername("testUsername");
-		testUser.setPassword("secret");
+		testUser.setPasswordHash("secret");
 
 		User createdUser = userService.createUser(testUser);
 
-		assertEquals(testUser.getId(), createdUser.getId());
+		assertNotNull(createdUser.getUserID());
 		assertEquals(testUser.getEmail(), createdUser.getEmail());
 		assertEquals(testUser.getUsername(), createdUser.getUsername());
 		assertNotNull(createdUser.getToken());
@@ -60,13 +60,13 @@ public class UserServiceIntegrationTest {
 		User testUser = new User();
 		testUser.setEmail("test@example.com");
 		testUser.setUsername("testUsername");
-		testUser.setPassword("secret");
+		testUser.setPasswordHash("secret");
 		userService.createUser(testUser);
 
 		User testUser2 = new User();
 		testUser2.setEmail("test2@example.com");
 		testUser2.setUsername("testUsername");
-		testUser2.setPassword("secret2");
+		testUser2.setPasswordHash("secret2");
 
 		assertThrows(ResponseStatusException.class, () -> userService.createUser(testUser2));
 	}

@@ -1,6 +1,6 @@
 package ch.uzh.ifi.hase.soprafs26.config;
 
-import ch.uzh.ifi.hase.soprafs26.security.BearerTokenAuthFilter;
+import ch.uzh.ifi.hase.soprafs26.security.AuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -27,7 +27,7 @@ import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, BearerTokenAuthFilter bearerTokenAuthFilter)
+    public SecurityFilterChain filterChain(HttpSecurity http, AuthFilter authFilter)
             throws Exception {
         http
                 .cors(Customizer.withDefaults())
@@ -44,7 +44,7 @@ public class SecurityConfig {
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/error", "/").permitAll()
                         .anyRequest().authenticated())
-                .addFilterBefore(bearerTokenAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

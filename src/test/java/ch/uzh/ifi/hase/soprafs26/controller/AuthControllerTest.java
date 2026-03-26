@@ -2,7 +2,8 @@ package ch.uzh.ifi.hase.soprafs26.controller;
 
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.LoginPostDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.RegisterPostDTO;
 import ch.uzh.ifi.hase.soprafs26.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -18,13 +19,8 @@ import org.springframework.web.server.ResponseStatusException;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
-import java.util.Collections;
-import java.util.List;
-
-import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -42,34 +38,56 @@ public class AuthControllerTest {
 
 	@Test
 	public void createUser_validInput_userCreated() throws Exception {
-		// given
 		User user = new User();
-		user.setId(1L);
+		user.setUserID("1");
 		user.setEmail("test@example.com");
 		user.setUsername("testUsername");
 		user.setToken("1");
 		user.setStatus(UserStatus.ONLINE);
-		user.setPassword("secret");
+		user.setPasswordHash("secret");
 
-		UserPostDTO userPostDTO = new UserPostDTO();
-		userPostDTO.setEmail("test@example.com");
-		userPostDTO.setUsername("testUsername");
-		userPostDTO.setPassword("secret");
+		RegisterPostDTO registerPostDTO = new RegisterPostDTO();
+		registerPostDTO.setEmail("test@example.com");
+		registerPostDTO.setUsername("testUsername");
+		registerPostDTO.setPassword("secret");
 
 		given(userService.createUser(Mockito.any())).willReturn(user);
 
-		// when/then -> do the request + validate the result
 		MockHttpServletRequestBuilder postRequest = post("/register")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(asJsonString(userPostDTO));
+				.content(asJsonString(registerPostDTO));
 
-		// then
 		mockMvc.perform(postRequest)
 				.andExpect(status().isCreated())
-				.andExpect(jsonPath("$.id", is(user.getId().intValue())))
+				.andExpect(jsonPath("$.userID", is(user.getUserID())))
 				.andExpect(jsonPath("$.email", is(user.getEmail())))
 				.andExpect(jsonPath("$.username", is(user.getUsername())))
 				.andExpect(jsonPath("$.status", is(user.getStatus().toString())));
+	}
+
+	@Test
+	public void loginUser_validInput_userLoggedIn() throws Exception {
+		User user = new User();
+		user.setUserID("user-1");
+		user.setUsername("testUsername");
+		user.setToken("new-token");
+		user.setStatus(UserStatus.ONLINE);
+		user.setPasswordHash("hashed-secret");
+
+		LoginPostDTO loginPostDTO = new LoginPostDTO();
+		loginPostDTO.setUsername("testUsername");
+		loginPostDTO.setPassword("secret");
+
+		given(userService.loginUser("testUsername", "secret")).willReturn(user);
+
+		MockHttpServletRequestBuilder postRequest = post("/login")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(asJsonString(loginPostDTO));
+
+		mockMvc.perform(postRequest)
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.userID", is(user.getUserID())))
+				.andExpect(jsonPath("$.token", is(user.getToken())));
 	}
 
 	private String asJsonString(final Object object) {

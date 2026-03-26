@@ -1,8 +1,10 @@
 package ch.uzh.ifi.hase.soprafs26.controller;
 
 import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.LoginGetDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.LoginPostDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.RegisterPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 import ch.uzh.ifi.hase.soprafs26.service.UserService;
 import jakarta.servlet.http.Cookie;
@@ -32,8 +34,8 @@ public class AuthController {
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     @ResponseBody
-    public UserGetDTO registerUser(@RequestBody UserPostDTO userPostDTO, HttpServletResponse response) {
-        User userInput = DTOMapper.INSTANCE.convertUserPostDTOtoEntity(userPostDTO);
+    public UserGetDTO registerUser(@RequestBody RegisterPostDTO registerPostDTO, HttpServletResponse response) {
+        User userInput = DTOMapper.INSTANCE.convertRegisterPostDTOtoEntity(registerPostDTO);
         User createdUser = userService.createUser(userInput);
         addAuthCookie(response, createdUser.getToken());
         return DTOMapper.INSTANCE.convertEntityToUserGetDTO(createdUser);
@@ -42,10 +44,11 @@ public class AuthController {
     @PostMapping("/login")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    public UserGetDTO loginUser(@RequestBody UserPostDTO userPostDTO, HttpServletResponse response) {
-        User loggedInUser = userService.loginUser(userPostDTO.getUsername(), userPostDTO.getPassword());
+    public LoginGetDTO loginUser(@RequestBody LoginPostDTO loginPostDTO, HttpServletResponse response) {
+        User loginInput = DTOMapper.INSTANCE.convertLoginPostDTOtoEntity(loginPostDTO);
+        User loggedInUser = userService.loginUser(loginInput.getUsername(), loginInput.getPasswordHash());
         addAuthCookie(response, loggedInUser.getToken());
-        return DTOMapper.INSTANCE.convertEntityToUserGetDTO(loggedInUser);
+        return DTOMapper.INSTANCE.convertEntityToLoginGetDTO(loggedInUser);
     }
 
     @PostMapping("/logout")
