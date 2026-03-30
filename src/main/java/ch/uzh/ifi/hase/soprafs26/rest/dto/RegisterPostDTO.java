@@ -3,7 +3,9 @@ package ch.uzh.ifi.hase.soprafs26.rest.dto;
 public class RegisterPostDTO {
 
     private String email;
+
     private String username;
+
     private String password;
 
     public String getEmail() {

@@ -50,6 +50,9 @@ public class UserController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         }
 
+        String authenticatedUserID = authentication != null ? authentication.getName() : null;
+        authorizationPolicyService.assertCanAccessUser(authenticatedUserID, requestedUser.getUserID(), AccessScope.OWN_USER);
+
         return DTOMapper.INSTANCE.convertEntityToUserGetDTO(requestedUser);
     }
 

@@ -44,7 +44,7 @@ public class SecurityIntegrationTest {
         registerPostDTO.setUsername("public-register-user");
         registerPostDTO.setPassword("secret");
 
-        MockHttpServletRequestBuilder request = post("/register")
+        MockHttpServletRequestBuilder request = post("/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(new ObjectMapper().writeValueAsString(registerPostDTO));
 
@@ -67,7 +67,7 @@ public class SecurityIntegrationTest {
 
         String loginPayload = "{\"username\":\"login-user\",\"password\":\"secret\"}";
 
-        MockHttpServletRequestBuilder request = post("/login")
+        MockHttpServletRequestBuilder request = post("/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(loginPayload);
 
@@ -174,7 +174,7 @@ public class SecurityIntegrationTest {
         persistedUser.setStatus(UserStatus.ONLINE);
         userRepository.saveAndFlush(persistedUser);
 
-        MockHttpServletRequestBuilder logoutRequest = post("/logout")
+        MockHttpServletRequestBuilder logoutRequest = post("/auth/logout")
                 .cookie(new MockCookie("AUTH_TOKEN", "logout-token"))
                 .contentType(MediaType.APPLICATION_JSON);
 
