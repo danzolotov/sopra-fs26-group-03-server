@@ -28,14 +28,17 @@ public class GroupService {
 	private final GroupRepository groupRepository;
 	private final GroupMembershipRepository membershipRepository;
 	private final ShoppingListRepository shoppingListRepository;
+	private final PantryRepository pantryRepository;
 
 	@Autowired
 	public GroupService(GroupRepository groupRepository,
 			GroupMembershipRepository membershipRepository,
-			ShoppingListRepository shoppingListRepository) {
+			ShoppingListRepository shoppingListRepository,
+			PantryRepository pantryRepository) {
 		this.groupRepository = groupRepository;
 		this.membershipRepository = membershipRepository;
 		this.shoppingListRepository = shoppingListRepository;
+		this.pantryRepository = pantryRepository;
 	}
 
 	public Group createGroup(User creator, String groupName) {
@@ -58,6 +61,11 @@ public class GroupService {
 		shoppingList.setGroupId(group.getId());
 		shoppingListRepository.save(shoppingList);
 		shoppingListRepository.flush();
+
+		Pantry pantry = new Pantry();
+		pantry.setGroupId(group.getId());
+		pantryRepository.save(pantry);
+		pantryRepository.flush();
 
 		log.debug("Created group '{}' (id={}) with admin userID={}", groupName, group.getId(), creator.getUserID());
 		return group;
@@ -182,6 +190,7 @@ public class GroupService {
 
 	private void deleteGroupInternal(Group group) {
 		shoppingListRepository.deleteAll(shoppingListRepository.findAllByGroupId(group.getId()));
+		pantryRepository.deleteAll(pantryRepository.findAllByGroupId(group.getId()));
 		groupRepository.delete(group);
 		groupRepository.flush();
 		log.debug("Deleted group {}", group.getId());
