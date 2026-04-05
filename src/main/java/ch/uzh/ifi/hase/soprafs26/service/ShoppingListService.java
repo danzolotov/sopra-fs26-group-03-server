@@ -52,6 +52,16 @@ public class ShoppingListService {
 		Ingredient ingredient = ingredientRepository.findById(ingredientId)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ingredient not found"));
 
+		for (ShoppingListItem existing : list.getItems()) {
+			if (existing.getIngredient().getId().equals(ingredientId) && Boolean.FALSE.equals(existing.getIsBought())) {
+				existing.setQuantity(existing.getQuantity() + quantity);
+				shoppingListItemRepository.save(existing);
+				shoppingListItemRepository.flush();
+				log.debug("Merged quantity for ingredient {} in shopping list {}", ingredientId, listId);
+				return existing;
+			}
+		}
+
 		ShoppingListItem item = new ShoppingListItem();
 		item.setShoppingList(list);
 		item.setIngredient(ingredient);
