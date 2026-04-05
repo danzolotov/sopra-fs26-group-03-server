@@ -25,6 +25,8 @@ public class GroupServiceTest {
 	private GroupMembershipRepository membershipRepository;
 	@Mock
 	private ShoppingListRepository shoppingListRepository;
+	@Mock
+	private PantryRepository pantryRepository;
 
 	@InjectMocks
 	private GroupService groupService;
@@ -67,12 +69,14 @@ public class GroupServiceTest {
 		when(groupRepository.save(any(Group.class))).thenAnswer(i -> { Group g = i.getArgument(0); g.setId(1L); return g; });
 		when(membershipRepository.save(any(GroupMembership.class))).thenAnswer(i -> i.getArgument(0));
 		when(shoppingListRepository.save(any(ShoppingList.class))).thenAnswer(i -> i.getArgument(0));
+		when(pantryRepository.save(any(Pantry.class))).thenAnswer(i -> i.getArgument(0));
 		when(groupRepository.findByInviteCode(any())).thenReturn(Optional.empty());
 
 		Group created = groupService.createGroup(testUser, "My Group");
 		assertNotNull(created);
 		assertEquals("My Group", created.getName());
 		verify(shoppingListRepository).save(any(ShoppingList.class));
+		verify(pantryRepository).save(any(Pantry.class));
 	}
 
 	@Test
@@ -186,6 +190,7 @@ public class GroupServiceTest {
 		when(membershipRepository.findByGroupId(1L)).thenReturn(Collections.singletonList(adminMembership));
 		when(membershipRepository.countByGroupId(1L)).thenReturn(1L);
 		when(shoppingListRepository.findAllByGroupId(1L)).thenReturn(Collections.emptyList());
+		when(pantryRepository.findAllByGroupId(1L)).thenReturn(Collections.emptyList());
 		groupService.leaveGroup(testUser);
 		verify(groupRepository).delete(testGroup);
 	}
@@ -204,6 +209,7 @@ public class GroupServiceTest {
 	public void deleteGroup_asAdmin_success() {
 		when(membershipRepository.findByUserUserID("user-1")).thenReturn(Optional.of(adminMembership));
 		when(shoppingListRepository.findAllByGroupId(1L)).thenReturn(Collections.emptyList());
+		when(pantryRepository.findAllByGroupId(1L)).thenReturn(Collections.emptyList());
 		groupService.deleteGroup(testUser);
 		verify(groupRepository).delete(testGroup);
 	}

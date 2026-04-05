@@ -70,4 +70,18 @@ public interface DTOMapper {
 	@Mapping(source = "ingredient.ingredientName", target = "ingredientName")
 	@Mapping(source = "ingredient.unit", target = "unit")
 	ShoppingListItemGetDTO convertEntityToShoppingListItemGetDTO(ShoppingListItem item);
+
+	// ─── Pantry mappings ────────────────────────────
+
+	@Mapping(source = "id", target = "id")
+	@Mapping(source = "groupId", target = "groupId")
+	@Mapping(source = "items", target = "items")
+	PantryGetDTO convertEntityToPantryGetDTO(Pantry pantry);
+
+	@Mapping(source = "id", target = "id")
+	@Mapping(source = "quantity", target = "quantity")
+	@Mapping(source = "ingredient.id", target = "ingredientId")
+	@Mapping(source = "ingredient.ingredientName", target = "ingredientName")
+	@Mapping(source = "ingredient.unit", target = "unit")
+	PantryItemGetDTO convertEntityToPantryItemGetDTO(PantryItem pantryItem);
 }
