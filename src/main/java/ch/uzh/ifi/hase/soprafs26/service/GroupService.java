@@ -1,11 +1,8 @@
 package ch.uzh.ifi.hase.soprafs26.service;
 
 import ch.uzh.ifi.hase.soprafs26.constant.GroupRole;
-import ch.uzh.ifi.hase.soprafs26.entity.Group;
-import ch.uzh.ifi.hase.soprafs26.entity.GroupMembership;
-import ch.uzh.ifi.hase.soprafs26.entity.User;
-import ch.uzh.ifi.hase.soprafs26.repository.GroupMembershipRepository;
-import ch.uzh.ifi.hase.soprafs26.repository.GroupRepository;
+import ch.uzh.ifi.hase.soprafs26.entity.*;
+import ch.uzh.ifi.hase.soprafs26.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,12 +27,15 @@ public class GroupService {
 
 	private final GroupRepository groupRepository;
 	private final GroupMembershipRepository membershipRepository;
+	private final ShoppingListRepository shoppingListRepository;
 
 	@Autowired
 	public GroupService(GroupRepository groupRepository,
-			GroupMembershipRepository membershipRepository) {
+			GroupMembershipRepository membershipRepository,
+			ShoppingListRepository shoppingListRepository) {
 		this.groupRepository = groupRepository;
 		this.membershipRepository = membershipRepository;
+		this.shoppingListRepository = shoppingListRepository;
 	}
 
 	public Group createGroup(User creator, String groupName) {
@@ -53,6 +53,11 @@ public class GroupService {
 		membership.setRole(GroupRole.ADMIN);
 		membershipRepository.save(membership);
 		membershipRepository.flush();
+
+		ShoppingList shoppingList = new ShoppingList();
+		shoppingList.setGroupId(group.getId());
+		shoppingListRepository.save(shoppingList);
+		shoppingListRepository.flush();
 
 		log.debug("Created group '{}' (id={}) with admin userID={}", groupName, group.getId(), creator.getUserID());
 		return group;
@@ -176,10 +181,12 @@ public class GroupService {
 	// ─── helpers ───────────────────────────────────────────────
 
 	private void deleteGroupInternal(Group group) {
+		shoppingListRepository.deleteAll(shoppingListRepository.findAllByGroupId(group.getId()));
 		groupRepository.delete(group);
 		groupRepository.flush();
 		log.debug("Deleted group {}", group.getId());
 	}
+
 
 	private void ensureUserNotInGroup(String userID) {
 		if (membershipRepository.findByUserUserID(userID).isPresent()) {

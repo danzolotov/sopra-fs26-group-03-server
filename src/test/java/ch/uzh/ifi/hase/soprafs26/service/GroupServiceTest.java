@@ -1,11 +1,8 @@
 package ch.uzh.ifi.hase.soprafs26.service;
 
 import ch.uzh.ifi.hase.soprafs26.constant.GroupRole;
-import ch.uzh.ifi.hase.soprafs26.entity.Group;
-import ch.uzh.ifi.hase.soprafs26.entity.GroupMembership;
-import ch.uzh.ifi.hase.soprafs26.entity.User;
-import ch.uzh.ifi.hase.soprafs26.repository.GroupMembershipRepository;
-import ch.uzh.ifi.hase.soprafs26.repository.GroupRepository;
+import ch.uzh.ifi.hase.soprafs26.entity.*;
+import ch.uzh.ifi.hase.soprafs26.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
@@ -26,6 +23,8 @@ public class GroupServiceTest {
 	private GroupRepository groupRepository;
 	@Mock
 	private GroupMembershipRepository membershipRepository;
+	@Mock
+	private ShoppingListRepository shoppingListRepository;
 
 	@InjectMocks
 	private GroupService groupService;
@@ -67,11 +66,13 @@ public class GroupServiceTest {
 		when(membershipRepository.findByUserUserID(testUser.getUserID())).thenReturn(Optional.empty());
 		when(groupRepository.save(any(Group.class))).thenAnswer(i -> { Group g = i.getArgument(0); g.setId(1L); return g; });
 		when(membershipRepository.save(any(GroupMembership.class))).thenAnswer(i -> i.getArgument(0));
+		when(shoppingListRepository.save(any(ShoppingList.class))).thenAnswer(i -> i.getArgument(0));
 		when(groupRepository.findByInviteCode(any())).thenReturn(Optional.empty());
 
 		Group created = groupService.createGroup(testUser, "My Group");
 		assertNotNull(created);
 		assertEquals("My Group", created.getName());
+		verify(shoppingListRepository).save(any(ShoppingList.class));
 	}
 
 	@Test
@@ -184,6 +185,7 @@ public class GroupServiceTest {
 		when(membershipRepository.findByUserUserID("user-1")).thenReturn(Optional.of(adminMembership));
 		when(membershipRepository.findByGroupId(1L)).thenReturn(Collections.singletonList(adminMembership));
 		when(membershipRepository.countByGroupId(1L)).thenReturn(1L);
+		when(shoppingListRepository.findAllByGroupId(1L)).thenReturn(Collections.emptyList());
 		groupService.leaveGroup(testUser);
 		verify(groupRepository).delete(testGroup);
 	}
@@ -201,6 +203,7 @@ public class GroupServiceTest {
 	@Test
 	public void deleteGroup_asAdmin_success() {
 		when(membershipRepository.findByUserUserID("user-1")).thenReturn(Optional.of(adminMembership));
+		when(shoppingListRepository.findAllByGroupId(1L)).thenReturn(Collections.emptyList());
 		groupService.deleteGroup(testUser);
 		verify(groupRepository).delete(testGroup);
 	}
