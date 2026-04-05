@@ -3,9 +3,7 @@ package ch.uzh.ifi.hase.soprafs26.rest.mapper;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
-import ch.uzh.ifi.hase.soprafs26.entity.Group;
-import ch.uzh.ifi.hase.soprafs26.entity.GroupMembership;
-import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.entity.*;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.*;
 
 @Mapper
@@ -57,4 +55,19 @@ public interface DTOMapper {
 	@Mapping(source = "role", target = "role")
 	@Mapping(source = "joinedAt", target = "joinedAt")
 	GroupMemberGetDTO convertEntityToGroupMemberGetDTO(GroupMembership membership);
+
+	// ─── Shopping list mappings ─────────────────────
+
+	@Mapping(source = "id", target = "id")
+	@Mapping(source = "groupId", target = "groupId")
+	@Mapping(source = "items", target = "items")
+	ShoppingListGetDTO convertEntityToShoppingListGetDTO(ShoppingList shoppingList);
+
+	@Mapping(source = "id", target = "id")
+	@Mapping(source = "quantity", target = "quantity")
+	@Mapping(source = "isBought", target = "isBought")
+	@Mapping(source = "ingredient.id", target = "ingredientId")
+	@Mapping(source = "ingredient.ingredientName", target = "ingredientName")
+	@Mapping(source = "ingredient.unit", target = "unit")
+	ShoppingListItemGetDTO convertEntityToShoppingListItemGetDTO(ShoppingListItem item);
 }
