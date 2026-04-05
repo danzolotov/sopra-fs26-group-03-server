@@ -9,6 +9,10 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
 
 import ch.uzh.ifi.hase.soprafs26.entity.ShoppingList;
 import ch.uzh.ifi.hase.soprafs26.entity.ShoppingListItem;
+import ch.uzh.ifi.hase.soprafs26.entity.Group;
+import ch.uzh.ifi.hase.soprafs26.entity.GroupMembership;
+import ch.uzh.ifi.hase.soprafs26.entity.Pantry;
+import ch.uzh.ifi.hase.soprafs26.entity.PantryItem;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.*;
 
 /**
@@ -56,4 +60,35 @@ public interface DTOMapper {
 	@Mapping(source = "ingredient.ingredientName", target = "ingredientName")
 	@Mapping(source = "ingredient.unit", target = "unit")
 	ShoppingListItemGetDTO convertEntityToShoppingListItemGetDTO(ShoppingListItem shoppingListItem);
+
+	// ─── Group mappings ─────────────────────────────
+
+	@Mapping(source = "id", target = "id")
+	@Mapping(source = "name", target = "name")
+	@Mapping(source = "inviteCode", target = "inviteCode")
+	@Mapping(source = "createdAt", target = "createdAt")
+	@Mapping(source = "memberships", target = "members")
+	GroupGetDTO convertEntityToGroupGetDTO(Group group);
+
+	@Mapping(source = "user.id", target = "userId")
+	@Mapping(source = "user.username", target = "username")
+	@Mapping(source = "user.name", target = "name")
+	@Mapping(source = "role", target = "role")
+	@Mapping(source = "joinedAt", target = "joinedAt")
+	GroupMemberGetDTO convertEntityToGroupMemberGetDTO(GroupMembership membership);
+
+	// ─── Pantry mappings ─────────────────────────────
+
+	@Mapping(source = "id", target = "id")
+	@Mapping(source = "groupId", target = "groupId")
+	@Mapping(source = "items", target = "items")
+	PantryGetDTO convertEntityToPantryGetDTO(Pantry pantry);
+
+	@Mapping(source = "id", target = "id")
+	@Mapping(source = "quantity", target = "quantity")
+	@Mapping(source = "ingredient.id", target = "ingredientId")
+	@Mapping(source = "ingredient.ingredientName", target = "ingredientName")
+	@Mapping(source = "ingredient.unit", target = "unit")
+	PantryItemGetDTO convertEntityToPantryItemGetDTO(PantryItem pantryItem);
 }
+
