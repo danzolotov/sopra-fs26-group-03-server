@@ -45,7 +45,7 @@ public class GroupController {
 		return DTOMapper.INSTANCE.convertEntityToGroupGetDTO(group);
 	}
 
-	@GetMapping("/groups/my")
+	@GetMapping("/groups/me")
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	public GroupGetDTO getMyGroup(Authentication auth) {
@@ -53,7 +53,7 @@ public class GroupController {
 		return DTOMapper.INSTANCE.convertEntityToGroupGetDTO(group);
 	}
 
-	@PutMapping("/groups/my")
+	@PutMapping("/groups/me")
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	public GroupGetDTO updateGroup(Authentication auth, @RequestBody GroupPostDTO dto) {
@@ -62,14 +62,14 @@ public class GroupController {
 		return DTOMapper.INSTANCE.convertEntityToGroupGetDTO(group);
 	}
 
-	@DeleteMapping("/groups/my")
+	@DeleteMapping("/groups/me")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void deleteGroup(Authentication auth) {
 		User caller = resolveUser(auth);
 		groupService.deleteGroup(caller);
 	}
 
-	@PostMapping("/groups/my/invite-code")
+	@PostMapping("/groups/me/invite-code")
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	public GroupGetDTO regenerateInviteCode(Authentication auth) {
@@ -78,7 +78,7 @@ public class GroupController {
 		return DTOMapper.INSTANCE.convertEntityToGroupGetDTO(group);
 	}
 
-	@PutMapping("/groups/my/members/{userID}")
+	@PutMapping("/groups/me/members/{userID}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void updateMemberRole(Authentication auth, @PathVariable String userID,
 			@RequestBody GroupRolePutDTO dto) {
@@ -86,14 +86,14 @@ public class GroupController {
 		groupService.updateMemberRole(caller, userID, dto.getRole());
 	}
 
-	@DeleteMapping("/groups/my/members/{userID}")
+	@DeleteMapping("/groups/me/members/{userID}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void removeMember(Authentication auth, @PathVariable String userID) {
 		User caller = resolveUser(auth);
 		groupService.removeMember(caller, userID);
 	}
 
-	@DeleteMapping("/groups/my/members/me")
+	@DeleteMapping("/groups/me/members/me")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void leaveGroup(Authentication auth) {
 		User caller = resolveUser(auth);
