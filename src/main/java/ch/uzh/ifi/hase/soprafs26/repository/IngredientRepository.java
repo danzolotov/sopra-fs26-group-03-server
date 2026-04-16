@@ -4,6 +4,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import ch.uzh.ifi.hase.soprafs26.entity.Ingredient;
 
+import java.util.Optional;
+
 @Repository("ingredientRepository")
 public interface IngredientRepository extends JpaRepository<Ingredient, Long> {
+	Optional<Ingredient> findByIngredientNameIgnoreCase(String ingredientName);
 }
