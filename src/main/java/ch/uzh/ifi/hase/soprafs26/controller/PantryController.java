@@ -22,7 +22,7 @@ public class PantryController {
 		this.groupService = groupService;
 	}
 
-	@GetMapping("/groups/my/pantry")
+	@GetMapping("/groups/me/pantry")
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	public PantryGetDTO getPantry(Authentication auth) {
@@ -31,7 +31,7 @@ public class PantryController {
 		return DTOMapper.INSTANCE.convertEntityToPantryGetDTO(pantry);
 	}
 
-	@PostMapping("/groups/my/pantry/items")
+	@PostMapping("/groups/me/pantry/items")
 	@ResponseStatus(HttpStatus.CREATED)
 	@ResponseBody
 	public PantryItemGetDTO addItem(Authentication auth, @RequestBody PantryItemPostDTO dto) {
@@ -42,7 +42,7 @@ public class PantryController {
 		return DTOMapper.INSTANCE.convertEntityToPantryItemGetDTO(item);
 	}
 
-	@GetMapping("/groups/my/pantry/items/{itemId}")
+	@GetMapping("/groups/me/pantry/items/{itemId}")
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	public PantryItemGetDTO getItem(Authentication auth, @PathVariable Long itemId) {
@@ -51,7 +51,7 @@ public class PantryController {
 		return DTOMapper.INSTANCE.convertEntityToPantryItemGetDTO(item);
 	}
 
-	@PutMapping("/groups/my/pantry/items/{itemId}")
+	@PutMapping("/groups/me/pantry/items/{itemId}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void updateItem(Authentication auth, @PathVariable Long itemId,
 			@RequestBody PantryItemPutDTO dto) {
@@ -60,7 +60,7 @@ public class PantryController {
 		pantryService.updateItem(itemId, dto.getIngredientId(), dto.getQuantity());
 	}
 
-	@DeleteMapping("/groups/my/pantry/items/{itemId}")
+	@DeleteMapping("/groups/me/pantry/items/{itemId}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void deleteItem(Authentication auth, @PathVariable Long itemId) {
 		Group group = groupService.getGroupOfUser(auth.getName());
