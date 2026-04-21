@@ -27,7 +27,7 @@ public class QuickStart {
     public static void main(String... args) throws Exception {
         try (ImageAnnotatorClient vision = ImageAnnotatorClient.create()) {
 
-            String fileName = "src/main/resources/shopping-list_testimage.jpg";
+            String fileName = "src/main/resources/shopping-list_testimage2.webp";
 
             Path path = Paths.get(fileName);
             byte[] data = Files.readAllBytes(path);

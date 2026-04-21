@@ -4,22 +4,81 @@ import ch.uzh.ifi.hase.soprafs26.entity.*;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.*;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 import ch.uzh.ifi.hase.soprafs26.service.GroupService;
+import ch.uzh.ifi.hase.soprafs26.service.IngredientService;
+import ch.uzh.ifi.hase.soprafs26.service.ShoppingListAutoDetectService;
 import ch.uzh.ifi.hase.soprafs26.service.ShoppingListService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 @RestController
 public class ShoppingListController {
 
 	private final ShoppingListService shoppingListService;
 	private final GroupService groupService;
+	private final ShoppingListAutoDetectService shoppingListAutoDetectService;
+	private final IngredientService ingredientService;
 
 	@Autowired
-	public ShoppingListController(ShoppingListService shoppingListService, GroupService groupService) {
+	public ShoppingListController(ShoppingListService shoppingListService, GroupService groupService,
+			ShoppingListAutoDetectService shoppingListAutoDetectService, IngredientService ingredientService) {
 		this.shoppingListService = shoppingListService;
 		this.groupService = groupService;
+		this.shoppingListAutoDetectService = shoppingListAutoDetectService;
+		this.ingredientService = ingredientService;
+	}
+
+	@PostMapping(value = "/shoppings-list/auto-detect", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@ResponseStatus(HttpStatus.OK)
+	@ResponseBody
+	public List<AutoDetectedIngredientGetDTO> autoDetectIngredients(Authentication auth, @RequestParam("file") MultipartFile file) {
+		groupService.getGroupOfUser(auth.getName());
+		if (file == null || file.isEmpty()) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A non-empty image file is required");
+		}
+
+		try {
+			List<ShoppingListAutoDetectService.DetectedShoppingItem> detectedItems =
+					shoppingListAutoDetectService.detectShoppingListItemsWithQuantities(file.getBytes());
+
+			Map<String, AutoDetectedIngredientGetDTO> aggregated = new LinkedHashMap<>();
+			for (ShoppingListAutoDetectService.DetectedShoppingItem detectedItem : detectedItems) {
+				Ingredient ingredient = ingredientService.resolveOrCreateDetectedIngredient(detectedItem.getIngredientName());
+				if (ingredient == null) {
+					continue;
+				}
+
+				String aggregationKey = ingredient.getId() != null
+						? "id:" + ingredient.getId()
+						: "name:" + ingredient.getIngredientName().toLowerCase(Locale.ROOT);
+				AutoDetectedIngredientGetDTO dto = aggregated.get(aggregationKey);
+				if (dto == null) {
+					dto = new AutoDetectedIngredientGetDTO();
+					dto.setId(ingredient.getId());
+					dto.setIngredientName(ingredient.getIngredientName());
+					dto.setIngredientDescription(ingredient.getIngredientDescription());
+					dto.setUnit(ingredient.getUnit());
+					dto.setQuantity(0);
+					aggregated.put(aggregationKey, dto);
+				}
+				dto.setQuantity(dto.getQuantity() + detectedItem.getQuantity());
+			}
+
+			return aggregated.values().stream().toList();
+		}
+		catch (IOException e) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to read uploaded image", e);
+		}
 	}
 
 	@GetMapping("/groups/my/shopping-list")
