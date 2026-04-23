@@ -2,28 +2,65 @@ package ch.uzh.ifi.hase.soprafs26.config;
 
 import ch.uzh.ifi.hase.soprafs26.entity.Ingredient;
 import ch.uzh.ifi.hase.soprafs26.entity.Recipe;
-import ch.uzh.ifi.hase.soprafs26.repository.IngredientRepository;
+import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.RecipeRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 import ch.uzh.ifi.hase.soprafs26.constant.Unit;
+import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-@Component
-public class RecipeSeeder implements CommandLineRunner {
+import java.util.UUID;
 
-    private final Logger log = LoggerFactory.getLogger(RecipeSeeder.class);
+/**
+ * DatabaseSeeder initializes the database with default data on startup.
+ * It seeds default recipes and a standard test user if they don't already exist.
+ */
+@Component
+public class DatabaseSeeder implements CommandLineRunner {
+
+    private final Logger log = LoggerFactory.getLogger(DatabaseSeeder.class);
     private final RecipeRepository recipeRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public RecipeSeeder(RecipeRepository recipeRepository) {
+    public DatabaseSeeder(RecipeRepository recipeRepository, UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.recipeRepository = recipeRepository;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     public void run(String... args) {
+        log.info("Starting database seeding process...");
+        seedTestUser();
+        seedRecipes();
+        log.info("Database seeding process completed.");
+    }
+
+    private void seedTestUser() {
+        String testUsername = "testuser";
+        if (userRepository.findByUsername(testUsername) == null) {
+            log.info("Seeding default test user: {}...", testUsername);
+            User testUser = new User();
+            testUser.setUsername(testUsername);
+            testUser.setEmail("test@platemate.ch");
+            testUser.setPasswordHash(passwordEncoder.encode("Password123!"));
+            testUser.setToken(UUID.randomUUID().toString());
+            testUser.setStatus(UserStatus.OFFLINE);
+            userRepository.save(testUser);
+            log.info("Test user '{}' seeded successfully with password 'Password123!'.", testUsername);
+        } else {
+            log.info("Test user '{}' already exists. Skipping user seeding.", testUsername);
+        }
+    }
+
+    private void seedRecipes() {
         log.info("Checking if recipes need to be seeded...");
         long count = recipeRepository.count();
         if (count == 0) {
@@ -109,9 +146,9 @@ public class RecipeSeeder implements CommandLineRunner {
             createAndAddIngredient(club, "Mayonnaise", Unit.MILLILITER, 20);
             recipeRepository.save(club);
 
-            log.info("Seeding complete. Total recipes: " + recipeRepository.count());
+            log.info("Recipe seeding complete. Total recipes: " + recipeRepository.count());
         } else {
-            log.info("Recipes already exist (count: {}). Skipping seeding.", count);
+            log.info("Recipes already exist (count: {}). Skipping recipe seeding.", count);
         }
     }
 
