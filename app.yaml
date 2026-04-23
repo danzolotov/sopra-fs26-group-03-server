@@ -3,3 +3,11 @@
 
 runtime: java17
 instance_class: F2
+
+env_variables:
+  # Paste your Supabase JDBC connection string here:
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://db.esstynxxjpnqtyvvohuk.supabase.co:5432/postgres"
+  SPRING_DATASOURCE_USERNAME: "postgres"
+  SPRING_DATASOURCE_PASSWORD: "eZ%Hcv9e+*?kbS_"
+  # Ensures cross-origin cookies work between Vercel and Google Cloud:
+  APP_AUTH_COOKIE_SECURE: "true"

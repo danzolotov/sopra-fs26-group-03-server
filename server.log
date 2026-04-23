@@ -1,0 +1,68 @@
+Starting a Gradle Daemon (subsequent builds will be faster)
+> Task :compileJava UP-TO-DATE
+> Task :processResources UP-TO-DATE
+> Task :classes UP-TO-DATE
+> Task :resolveMainClassName UP-TO-DATE
+
+> Task :bootRun
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.0.0)
+
+2026-04-23T23:50:51.825+02:00  INFO 3111 --- [  restartedMain] ch.uzh.ifi.hase.soprafs26.Application    : Starting Application using Java 17.0.18 with PID 3111 (/Users/karina/Local/UZH_study/SoPra/PlateMate/server/build/classes/java/main started by karina in /Users/karina/Local/UZH_study/SoPra/PlateMate/server)
+2026-04-23T23:50:51.828+02:00  INFO 3111 --- [  restartedMain] ch.uzh.ifi.hase.soprafs26.Application    : No active profile set, falling back to 1 default profile: "default"
+2026-04-23T23:50:51.898+02:00  INFO 3111 --- [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-04-23T23:50:51.898+02:00  INFO 3111 --- [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-04-23T23:50:52.154+02:00  INFO 3111 --- [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-04-23T23:50:52.189+02:00  INFO 3111 --- [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 31 ms. Found 10 JPA repository interfaces.
+2026-04-23T23:50:52.484+02:00  INFO 3111 --- [  restartedMain] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8080 (http)
+2026-04-23T23:50:52.489+02:00  INFO 3111 --- [  restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-04-23T23:50:52.489+02:00  INFO 3111 --- [  restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.14]
+2026-04-23T23:50:52.506+02:00  INFO 3111 --- [  restartedMain] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 608 ms
+2026-04-23T23:50:52.555+02:00  INFO 3111 --- [  restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-04-23T23:50:52.581+02:00  INFO 3111 --- [  restartedMain] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 7.1.8.Final
+2026-04-23T23:50:52.799+02:00  INFO 3111 --- [  restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-04-23T23:50:52.815+02:00  INFO 3111 --- [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-04-23T23:50:52.904+02:00  INFO 3111 --- [  restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection conn0: url=jdbc:h2:file:./data/platemate user=SA
+2026-04-23T23:50:52.905+02:00  INFO 3111 --- [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-04-23T23:50:52.915+02:00  WARN 3111 --- [  restartedMain] org.hibernate.orm.deprecation            : HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-04-23T23:50:52.968+02:00  INFO 3111 --- [  restartedMain] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:h2:file:./data/platemate]
+	Database driver: H2 JDBC Driver
+	Database dialect: H2Dialect
+	Database version: 2.4.240
+	Default catalog/schema: PLATEMATE/PUBLIC
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: 100
+	Pool: DatasourceConnectionProviderImpl
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-04-23T23:50:55.108+02:00  INFO 3111 --- [  restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-04-23T23:50:55.178+02:00  INFO 3111 --- [  restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-04-23T23:50:55.261+02:00  INFO 3111 --- [  restartedMain] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-04-23T23:50:55.804+02:00  WARN 3111 --- [  restartedMain] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-04-23T23:50:55.887+02:00  WARN 3111 --- [  restartedMain] .s.a.UserDetailsServiceAutoConfiguration : 
+
+Using generated security password: 3a84fbe2-940f-4f68-bb7a-872063782382
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2026-04-23T23:50:55.893+02:00  INFO 3111 --- [  restartedMain] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+2026-04-23T23:50:56.154+02:00  INFO 3111 --- [  restartedMain] o.s.b.h.a.H2ConsoleAutoConfiguration     : H2 console available at '/h2-console'. Database available at 'jdbc:h2:file:./data/platemate'
+2026-04-23T23:50:56.186+02:00  INFO 3111 --- [  restartedMain] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8080 (http) with context path '/'
+2026-04-23T23:50:56.190+02:00  INFO 3111 --- [  restartedMain] ch.uzh.ifi.hase.soprafs26.Application    : Started Application in 4.538 seconds (process running for 4.78)
+2026-04-23T23:50:56.191+02:00  INFO 3111 --- [  restartedMain] c.u.i.h.soprafs26.config.DatabaseSeeder  : Starting database seeding process...
+2026-04-23T23:50:56.420+02:00  INFO 3111 --- [  restartedMain] c.u.i.h.soprafs26.config.DatabaseSeeder  : Test user 'testuser' already exists. Forcing password update to 'Password123!'.
+2026-04-23T23:50:56.620+02:00  INFO 3111 --- [  restartedMain] c.u.i.h.soprafs26.config.DatabaseSeeder  : Checking if recipes need to be seeded...
+2026-04-23T23:50:56.636+02:00  INFO 3111 --- [  restartedMain] c.u.i.h.soprafs26.config.DatabaseSeeder  : Recipes already exist (count: 10). Skipping recipe seeding.
+2026-04-23T23:50:56.636+02:00  INFO 3111 --- [  restartedMain] c.u.i.h.soprafs26.config.DatabaseSeeder  : Database seeding process completed.
+2026-04-23T23:51:07.133+02:00  INFO 3111 --- [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-23T23:51:07.133+02:00  INFO 3111 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-04-23T23:51:07.134+02:00  INFO 3111 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms

@@ -44,6 +44,7 @@ dependencies {
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     runtimeOnly 'com.h2database:h2'
+    runtimeOnly 'org.postgresql:postgresql'
 
     implementation 'com.google.cloud:google-cloud-vision:3.46.0'
 

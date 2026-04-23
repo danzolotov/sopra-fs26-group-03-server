@@ -45,7 +45,8 @@ public class DatabaseSeeder implements CommandLineRunner {
 
     private void seedTestUser() {
         String testUsername = "testuser";
-        if (userRepository.findByUsername(testUsername) == null) {
+        User existingUser = userRepository.findByUsername(testUsername);
+        if (existingUser == null) {
             log.info("Seeding default test user: {}...", testUsername);
             User testUser = new User();
             testUser.setUsername(testUsername);
@@ -56,7 +57,9 @@ public class DatabaseSeeder implements CommandLineRunner {
             userRepository.save(testUser);
             log.info("Test user '{}' seeded successfully with password 'Password123!'.", testUsername);
         } else {
-            log.info("Test user '{}' already exists. Skipping user seeding.", testUsername);
+            log.info("Test user '{}' already exists. Forcing password update to 'Password123!'.", testUsername);
+            existingUser.setPasswordHash(passwordEncoder.encode("Password123!"));
+            userRepository.save(existingUser);
         }
     }
 
