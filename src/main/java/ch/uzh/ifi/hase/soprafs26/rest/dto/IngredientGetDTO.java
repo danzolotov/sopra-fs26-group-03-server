@@ -7,6 +7,7 @@ public class IngredientGetDTO {
 	private String ingredientName;
 	private String ingredientDescription;
 	private Unit unit;
+	private Integer quantity;
 
 	public Long getId() {
 		return id;
@@ -38,6 +39,14 @@ public class IngredientGetDTO {
 
 	public void setUnit(Unit unit) {
 		this.unit = unit;
+	}
+
+	public Integer getQuantity() {
+		return quantity;
+	}
+
+	public void setQuantity(Integer quantity) {
+		this.quantity = quantity;
 	}
 }
 

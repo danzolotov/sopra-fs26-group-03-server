@@ -14,7 +14,7 @@ public class Ingredient implements Serializable {
 	@GeneratedValue
 	private Long id;
 
-	@Column(nullable = false, unique = true)
+	@Column(nullable = false)
 	private String ingredientName;
 
 	@Column(nullable = true)
@@ -24,6 +24,13 @@ public class Ingredient implements Serializable {
 	@Enumerated(EnumType.STRING)
 	private Unit unit;
 
+	@Column(nullable = true)
+	private Integer quantity;
+
+	@ManyToOne
+	@JoinColumn(name = "recipe_id")
+	private Recipe recipe;
+
 	public Long getId() { return id; }
 	public void setId(Long id) { this.id = id; }
 	public String getIngredientName() { return ingredientName; }
@@ -32,4 +39,8 @@ public class Ingredient implements Serializable {
 	public void setIngredientDescription(String ingredientDescription) { this.ingredientDescription = ingredientDescription; }
 	public Unit getUnit() { return unit; }
 	public void setUnit(Unit unit) { this.unit = unit; }
+	public Integer getQuantity() { return quantity; }
+	public void setQuantity(Integer quantity) { this.quantity = quantity; }
+	public Recipe getRecipe() { return recipe; }
+	public void setRecipe(Recipe recipe) { this.recipe = recipe; }
 }
