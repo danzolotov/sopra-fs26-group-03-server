@@ -40,6 +40,17 @@ public class UserController {
 		return userGetDTOs;
 	}
 
+	@GetMapping("/users/me")
+	@ResponseStatus(HttpStatus.OK)
+	@ResponseBody
+	public UserGetDTO getMe(Authentication authentication) {
+		if (authentication == null) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+		}
+		User user = userService.getUserById(authentication.getName());
+		return DTOMapper.INSTANCE.convertEntityToUserGetDTO(user);
+	}
+
 
     @GetMapping("/users/{userID}")
     @ResponseStatus(HttpStatus.OK)
