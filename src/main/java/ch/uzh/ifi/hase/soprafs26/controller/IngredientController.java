@@ -15,47 +15,47 @@ import java.util.List;
 @RestController
 public class IngredientController {
 
-	private final IngredientService ingredientService;
+private final IngredientService ingredientService;
 
-	public IngredientController(IngredientService ingredientService) {
-		this.ingredientService = ingredientService;
-	}
+public IngredientController(IngredientService ingredientService) {
+this.ingredientService = ingredientService;
+}
 
-	@GetMapping("/ingredients")
-	@ResponseStatus(HttpStatus.OK)
-	@ResponseBody
-	public List<IngredientGetDTO> getIngredients() {
-		return ingredientService.getIngredients().stream()
-				.map(DTOMapper.INSTANCE::convertEntityToIngredientGetDTO)
-				.toList();
-	}
+@GetMapping("/ingredients")
+@ResponseStatus(HttpStatus.OK)
+@ResponseBody
+public List<IngredientGetDTO> getIngredients() {
+return ingredientService.getIngredients().stream()
+.map(DTOMapper.INSTANCE::convertEntityToIngredientGetDTO)
+.toList();
+}
 
-	@PostMapping("/ingredients")
-	@ResponseStatus(HttpStatus.CREATED)
-	@ResponseBody
-	public IngredientGetDTO createIngredient(@RequestBody IngredientPostDTO dto) {
-		Ingredient ingredient = DTOMapper.INSTANCE.convertIngredientPostDTOtoEntity(dto);
-		Ingredient createdIngredient = ingredientService.createIngredient(ingredient);
-		return DTOMapper.INSTANCE.convertEntityToIngredientGetDTO(createdIngredient);
-	}
+@PostMapping("/ingredients")
+@ResponseStatus(HttpStatus.CREATED)
+@ResponseBody
+public IngredientGetDTO createIngredient(@RequestBody IngredientPostDTO dto) {
+Ingredient ingredient = DTOMapper.INSTANCE.convertIngredientPostDTOtoEntity(dto);
+Ingredient createdIngredient = ingredientService.createIngredient(ingredient);
+return DTOMapper.INSTANCE.convertEntityToIngredientGetDTO(createdIngredient);
+}
 
-	@PostMapping("/ingredients/autocomplete")
-	@ResponseStatus(HttpStatus.OK)
-	@ResponseBody
-	public List<IngredientAutocompleteMatchDTO> autocompleteIngredients(@RequestBody IngredientAutocompleteRequestDTO dto) {
-		List<String> foundIngredients = dto == null ? List.of() : dto.getFoundIngredients();
-		return ingredientService.autocompleteIngredients(foundIngredients).stream()
-				.map(this::toAutocompleteMatchDTO)
-				.toList();
-	}
+@PostMapping("/ingredients/autocomplete")
+@ResponseStatus(HttpStatus.OK)
+@ResponseBody
+public List<IngredientAutocompleteMatchDTO> autocompleteIngredients(@RequestBody IngredientAutocompleteRequestDTO dto) {
+List<String> foundIngredients = dto == null ? List.of() : dto.getFoundIngredients();
+return ingredientService.autocompleteIngredients(foundIngredients).stream()
+.map(this::toAutocompleteMatchDTO)
+.toList();
+}
 
-	private IngredientAutocompleteMatchDTO toAutocompleteMatchDTO(IngredientService.IngredientAutocompleteResult result) {
-		IngredientAutocompleteMatchDTO dto = new IngredientAutocompleteMatchDTO();
-		dto.setInput(result.getInput());
-		dto.setIngredientName(result.getIngredientName());
-		dto.setIngredientId(result.getIngredientId());
-		dto.setSimilarity(result.getSimilarity());
-		dto.setMatched(result.isMatched());
-		return dto;
-	}
+private IngredientAutocompleteMatchDTO toAutocompleteMatchDTO(IngredientService.IngredientAutocompleteResult result) {
+IngredientAutocompleteMatchDTO dto = new IngredientAutocompleteMatchDTO();
+dto.setInput(result.getInput());
+dto.setIngredientName(result.getIngredientName());
+dto.setIngredientId(result.getIngredientId());
+dto.setSimilarity(result.getSimilarity());
+dto.setMatched(result.isMatched());
+return dto;
+}
 }
