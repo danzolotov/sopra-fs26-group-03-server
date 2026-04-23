@@ -57,6 +57,9 @@ public class GroupService {
 		membershipRepository.save(membership);
 		membershipRepository.flush();
 
+		// Update bidirectional relationship in memory
+		group.getMemberships().add(membership);
+
 		ShoppingList shoppingList = new ShoppingList();
 		shoppingList.setGroupId(group.getId());
 		shoppingListRepository.save(shoppingList);
@@ -90,6 +93,9 @@ public class GroupService {
 		membership.setRole(GroupRole.MEMBER);
 		membershipRepository.save(membership);
 		membershipRepository.flush();
+
+		// Update bidirectional relationship in memory
+		group.getMemberships().add(membership);
 
 		log.debug("User {} joined group {} via invite code", joiner.getUserID(), group.getId());
 		return group;
