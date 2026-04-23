@@ -43,4 +43,6 @@ local.properties
 .vscode
 .xcode*
 
-/bintest_output.txt
+#bintest_output.txt
+
+.txt
