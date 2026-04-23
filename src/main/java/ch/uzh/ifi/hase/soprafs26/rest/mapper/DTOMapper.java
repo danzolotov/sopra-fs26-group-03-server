@@ -68,6 +68,7 @@ public interface DTOMapper {
 	@Mapping(source = "isBought", target = "isBought")
 	@Mapping(source = "ingredient.id", target = "ingredientId")
 	@Mapping(source = "ingredient.ingredientName", target = "ingredientName")
+    @Mapping(source = "ingredient.category", target = "category")
 	@Mapping(source = "ingredient.unit", target = "unit")
 	ShoppingListItemGetDTO convertEntityToShoppingListItemGetDTO(ShoppingListItem item);
 
