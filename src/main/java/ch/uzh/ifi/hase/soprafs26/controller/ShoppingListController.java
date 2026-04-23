@@ -22,7 +22,7 @@ public class ShoppingListController {
 		this.groupService = groupService;
 	}
 
-	@GetMapping("/groups/my/shopping-list")
+	@GetMapping("/groups/me/shopping-list")
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	public ShoppingListGetDTO getShoppingList(Authentication auth) {
@@ -31,7 +31,7 @@ public class ShoppingListController {
 		return DTOMapper.INSTANCE.convertEntityToShoppingListGetDTO(list);
 	}
 
-	@PostMapping("/groups/my/shopping-list/items")
+	@PostMapping("/groups/me/shopping-list/items")
 	@ResponseStatus(HttpStatus.CREATED)
 	@ResponseBody
 	public ShoppingListItemGetDTO addItem(Authentication auth, @RequestBody ShoppingListItemPostDTO dto) {
@@ -42,7 +42,7 @@ public class ShoppingListController {
 		return DTOMapper.INSTANCE.convertEntityToShoppingListItemGetDTO(item);
 	}
 
-	@GetMapping("/groups/my/shopping-list/items/{itemId}")
+	@GetMapping("/groups/me/shopping-list/items/{itemId}")
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	public ShoppingListItemGetDTO getItem(Authentication auth, @PathVariable Long itemId) {
@@ -51,7 +51,7 @@ public class ShoppingListController {
 		return DTOMapper.INSTANCE.convertEntityToShoppingListItemGetDTO(item);
 	}
 
-	@PutMapping("/groups/my/shopping-list/items/{itemId}")
+	@PutMapping("/groups/me/shopping-list/items/{itemId}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void updateItem(Authentication auth, @PathVariable Long itemId,
 			@RequestBody ItemPutDTO dto) {
@@ -60,7 +60,7 @@ public class ShoppingListController {
 		shoppingListService.updateItem(itemId, dto.getIngredientId(), dto.getQuantity());
 	}
 
-	@PatchMapping("/groups/my/shopping-list/items/{itemId}")
+	@PatchMapping("/groups/me/shopping-list/items/{itemId}")
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	public ShoppingListItemGetDTO patchItemBoughtStatus(Authentication auth, @PathVariable Long itemId,
@@ -71,7 +71,7 @@ public class ShoppingListController {
 		return DTOMapper.INSTANCE.convertEntityToShoppingListItemGetDTO(item);
 	}
 
-	@DeleteMapping("/groups/my/shopping-list/items/{itemId}")
+	@DeleteMapping("/groups/me/shopping-list/items/{itemId}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void deleteItem(Authentication auth, @PathVariable Long itemId) {
 		Group group = groupService.getGroupOfUser(auth.getName());
