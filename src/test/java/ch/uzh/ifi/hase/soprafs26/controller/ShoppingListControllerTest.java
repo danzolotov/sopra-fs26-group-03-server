@@ -36,7 +36,13 @@ public class ShoppingListControllerTest {
 	private GroupService groupService;
 
 	@MockitoBean
-	private UserService userService;
+	private ch.uzh.ifi.hase.soprafs26.service.ShoppingListAutoDetectService shoppingListAutoDetectService;
+
+	@MockitoBean
+	private ch.uzh.ifi.hase.soprafs26.service.IngredientService ingredientService;
+
+	@MockitoBean
+	private ch.uzh.ifi.hase.soprafs26.service.UserService userService;
 
 	private Group testGroup;
 	private ShoppingList testList;
