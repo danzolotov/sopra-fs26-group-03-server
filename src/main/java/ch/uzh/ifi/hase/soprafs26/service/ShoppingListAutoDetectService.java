@@ -23,17 +23,11 @@ import java.util.regex.Pattern;
 public class ShoppingListAutoDetectService {
 
 	private static final Pattern LEADING_LIST_MARKER =
-			Pattern.compile("^(?:[-*\\u2022]|\\d+[.)]|\\[\\s*[xX ]\\s*\\])\\s+");
+			Pattern.compile("^(?:[-*\\u2022]|\\d+[.)]|\\[\\s*[xX ]\\s*])\\s+");
 	private static final Pattern STARTS_WITH_QUANTITY =
-			Pattern.compile("^\\d+(?:[.,]\\d+)?\\s*(?:x|kg|g|mg|l|ml|pcs?|pack|packs|bottle|bottles)?\\b.*",
+			Pattern.compile("^\\d+(?:[.,]\\d+)?\\s*(?:x|kg|g|mg|l|ml|pcs?|pack|packs)?\\b.*",
 					Pattern.CASE_INSENSITIVE);
-	private static final Pattern LEADING_QUANTITY = Pattern.compile("^\\s*(\\d+)(?:[.,]\\d+)?\\s*(?:x)?\\b\\s*");
-
-	public List<String> detectShoppingListItems(byte[] imageBytes) {
-		return detectShoppingListItemsWithQuantities(imageBytes).stream()
-				.map(DetectedShoppingItem::getIngredientName)
-				.toList();
-	}
+	private static final Pattern LEADING_QUANTITY = Pattern.compile("^\\s*(\\d+)(?:[.,]\\d+)?\\b\\s*");
 
 	public List<DetectedShoppingItem> detectShoppingListItemsWithQuantities(byte[] imageBytes) {
 		if (imageBytes == null || imageBytes.length == 0) {
@@ -75,12 +69,6 @@ public class ShoppingListAutoDetectService {
 		catch (IOException e) {
 			throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Failed to access Vision API", e);
 		}
-	}
-
-	private List<String> extractShoppingListItems(String ocrText) {
-		return extractShoppingListItemsWithQuantities(ocrText).stream()
-				.map(DetectedShoppingItem::getIngredientName)
-				.toList();
 	}
 
 	private List<DetectedShoppingItem> extractShoppingListItemsWithQuantities(String ocrText) {
@@ -169,22 +157,9 @@ public class ShoppingListAutoDetectService {
 		return cleaned.replaceAll("\\s+", " ");
 	}
 
-	public static class DetectedShoppingItem {
-		private final String ingredientName;
-		private final int quantity;
+    public record DetectedShoppingItem(String ingredientName, int quantity) {
 
-		public DetectedShoppingItem(String ingredientName, int quantity) {
-			this.ingredientName = ingredientName;
-			this.quantity = quantity;
-		}
 
-		public String getIngredientName() {
-			return ingredientName;
-		}
-
-		public int getQuantity() {
-			return quantity;
-		}
-	}
+    }
 }
 

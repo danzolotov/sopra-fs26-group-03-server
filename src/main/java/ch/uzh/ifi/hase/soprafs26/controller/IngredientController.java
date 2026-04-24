@@ -31,7 +31,6 @@ public class IngredientController {
 
 	@GetMapping("/ingredients")
 	@ResponseStatus(HttpStatus.OK)
-	@ResponseBody
 	public List<IngredientGetDTO> getIngredients(HttpServletRequest request) {
 		User user = resolveUserFromRequest(request);
 		return ingredientService.getIngredients(user).stream()
@@ -41,7 +40,6 @@ public class IngredientController {
 
     @PostMapping("/ingredients")
     @ResponseStatus(HttpStatus.CREATED)
-    @ResponseBody
     public IngredientGetDTO createIngredient(@RequestBody IngredientPostDTO dto, HttpServletRequest request) {
         User user = resolveUserFromRequest(request);
         Ingredient ingredient = DTOMapper.INSTANCE.convertIngredientPostDTOtoEntity(dto);
@@ -52,7 +50,6 @@ public class IngredientController {
 
 @PostMapping("/ingredients/autocomplete")
 @ResponseStatus(HttpStatus.OK)
-@ResponseBody
 public List<IngredientAutocompleteMatchDTO> autocompleteIngredients(@RequestBody IngredientAutocompleteRequestDTO dto) {
 List<String> foundIngredients = dto == null ? List.of() : dto.getFoundIngredients();
 return ingredientService.autocompleteIngredients(foundIngredients).stream()
@@ -79,11 +76,11 @@ return ingredientService.autocompleteIngredients(foundIngredients).stream()
 
 private IngredientAutocompleteMatchDTO toAutocompleteMatchDTO(IngredientService.IngredientAutocompleteResult result) {
 IngredientAutocompleteMatchDTO dto = new IngredientAutocompleteMatchDTO();
-dto.setInput(result.getInput());
-dto.setIngredientName(result.getIngredientName());
-dto.setIngredientId(result.getIngredientId());
-dto.setSimilarity(result.getSimilarity());
-dto.setMatched(result.isMatched());
+dto.setInput(result.input());
+dto.setIngredientName(result.ingredientName());
+dto.setIngredientId(result.ingredientId());
+dto.setSimilarity(result.similarity());
+dto.setMatched(result.matched());
 return dto;
 }
 }

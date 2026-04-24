@@ -12,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -74,10 +73,10 @@ this.ingredientRepository = ingredientRepository;
 	public void seedIngredients(User user) {
 		for (IngredientSeedData.IngredientData seed : IngredientSeedData.INGREDIENTS) {
 			Ingredient ingredient = new Ingredient();
-			ingredient.setIngredientName(seed.getName());
-            ingredient.setCategory(seed.getCategory());
+			ingredient.setIngredientName(seed.name());
+            ingredient.setCategory(seed.category());
 			ingredient.setIngredientDescription("");
-			ingredient.setUnit(seed.getUnit());
+			ingredient.setUnit(seed.unit());
             ingredient.setUser(user);
 			ingredientRepository.save(ingredient);
 		}
@@ -142,7 +141,7 @@ return resolveOrCreateIngredient(matches.get(0));
 }
 
 private Ingredient resolveOrCreateIngredient(IngredientAutocompleteResult match) {
-Ingredient byId = resolveById(match.getIngredientId());
+Ingredient byId = resolveById(match.ingredientId());
 if (byId != null) {
 return byId;
 }
@@ -172,11 +171,11 @@ return ingredientRepository.findById(ingredientId).orElse(null);
 }
 
 private String deriveIngredientName(IngredientAutocompleteResult match) {
-if (match.isMatched() && match.getIngredientName() != null && !match.getIngredientName().isBlank()) {
-return match.getIngredientName().trim();
+if (match.matched() && match.ingredientName() != null && !match.ingredientName().isBlank()) {
+return match.ingredientName().trim();
 }
 
-String rawInput = match.getInput() == null ? "" : match.getInput().trim();
+String rawInput = match.input() == null ? "" : match.input().trim();
 if (rawInput.isBlank()) {
 return "";
 }
@@ -195,7 +194,7 @@ return "";
 }
 
 StringBuilder result = new StringBuilder();
-for (String token : Arrays.asList(value.split(" "))) {
+for (String token : value.split(" ")) {
 if (token.isBlank()) {
 continue;
 }
@@ -224,10 +223,10 @@ databaseIngredientIdsByName.put(canonicalName.toLowerCase(Locale.ROOT), ingredie
 }
 
 for (IngredientSeedData.IngredientData seed : IngredientSeedData.INGREDIENTS) {
-String canonicalName = seed.getName();
+String canonicalName = seed.name();
 Long ingredientId = databaseIngredientIdsByName.get(canonicalName.toLowerCase(Locale.ROOT));
 addCandidateLabel(candidates, canonicalName, canonicalName, ingredientId);
-for (String alias : seed.getAliases()) {
+for (String alias : seed.aliases()) {
 addCandidateLabel(candidates, canonicalName, alias, ingredientId);
 }
 }
@@ -334,62 +333,15 @@ return token.substring(0, token.length() - 1);
 return token;
 }
 
-private static class CandidateIngredient {
-private final String canonicalName;
-private final Long ingredientId;
-private final String normalizedLabel;
+    private record CandidateIngredient(String canonicalName, Long ingredientId, String normalizedLabel) {
+    }
 
-private CandidateIngredient(String canonicalName, Long ingredientId, String normalizedLabel) {
-this.canonicalName = canonicalName;
-this.ingredientId = ingredientId;
-this.normalizedLabel = normalizedLabel;
-}
-}
+    private record CandidateMatch(CandidateIngredient candidate, double similarity) {
+    }
 
-private static class CandidateMatch {
-private final CandidateIngredient candidate;
-private final double similarity;
+    public record IngredientAutocompleteResult(String input, String ingredientName, Long ingredientId,
+                                               double similarity, boolean matched) {
 
-private CandidateMatch(CandidateIngredient candidate, double similarity) {
-this.candidate = candidate;
-this.similarity = similarity;
-}
-}
 
-public static class IngredientAutocompleteResult {
-private final String input;
-private final String ingredientName;
-private final Long ingredientId;
-private final double similarity;
-private final boolean matched;
-
-public IngredientAutocompleteResult(String input, String ingredientName, Long ingredientId, double similarity,
-boolean matched) {
-this.input = input;
-this.ingredientName = ingredientName;
-this.ingredientId = ingredientId;
-this.similarity = similarity;
-this.matched = matched;
-}
-
-public String getInput() {
-return input;
-}
-
-public String getIngredientName() {
-return ingredientName;
-}
-
-public Long getIngredientId() {
-return ingredientId;
-}
-
-public double getSimilarity() {
-return similarity;
-}
-
-public boolean isMatched() {
-return matched;
-}
-}
+    }
 }

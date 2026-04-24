@@ -40,7 +40,6 @@ public class ShoppingListController {
 
 	@PostMapping(value = "/shoppings-list/auto-detect", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	@ResponseStatus(HttpStatus.OK)
-	@ResponseBody
 	public List<AutoDetectedIngredientGetDTO> autoDetectIngredients(Authentication auth, @RequestParam("file") MultipartFile file) {
 		groupService.getGroupOfUser(auth.getName());
 		if (file == null || file.isEmpty()) {
@@ -53,7 +52,7 @@ public class ShoppingListController {
 
 			Map<String, AutoDetectedIngredientGetDTO> aggregated = new LinkedHashMap<>();
 			for (ShoppingListAutoDetectService.DetectedShoppingItem detectedItem : detectedItems) {
-				Ingredient ingredient = ingredientService.resolveOrCreateDetectedIngredient(detectedItem.getIngredientName());
+				Ingredient ingredient = ingredientService.resolveOrCreateDetectedIngredient(detectedItem.ingredientName());
 				if (ingredient == null) {
 					continue;
 				}
@@ -71,7 +70,7 @@ public class ShoppingListController {
 					dto.setQuantity(0);
 					aggregated.put(aggregationKey, dto);
 				}
-				dto.setQuantity(dto.getQuantity() + detectedItem.getQuantity());
+				dto.setQuantity(dto.getQuantity() + detectedItem.quantity());
 			}
 
 			return aggregated.values().stream().toList();
@@ -83,7 +82,6 @@ public class ShoppingListController {
 
 	@GetMapping("/groups/me/shopping-list")
 	@ResponseStatus(HttpStatus.OK)
-	@ResponseBody
 	public ShoppingListGetDTO getShoppingList(Authentication auth) {
 		Group group = groupService.getGroupOfUser(auth.getName());
 		ShoppingList list = shoppingListService.getShoppingListByGroupId(group.getId());
@@ -92,7 +90,6 @@ public class ShoppingListController {
 
 	@PostMapping("/groups/me/shopping-list/items")
 	@ResponseStatus(HttpStatus.CREATED)
-	@ResponseBody
 	public ShoppingListItemGetDTO addItem(Authentication auth, @RequestBody ShoppingListItemPostDTO dto) {
 		Group group = groupService.getGroupOfUser(auth.getName());
 		ShoppingList list = shoppingListService.getShoppingListByGroupId(group.getId());
@@ -103,7 +100,6 @@ public class ShoppingListController {
 
 	@GetMapping("/groups/me/shopping-list/items/{itemId}")
 	@ResponseStatus(HttpStatus.OK)
-	@ResponseBody
 	public ShoppingListItemGetDTO getItem(Authentication auth, @PathVariable Long itemId) {
 		Group group = groupService.getGroupOfUser(auth.getName());
 		ShoppingListItem item = shoppingListService.getItemByIdAndVerifyGroup(itemId, group.getId());
@@ -121,7 +117,6 @@ public class ShoppingListController {
 
 	@PatchMapping("/groups/me/shopping-list/items/{itemId}")
 	@ResponseStatus(HttpStatus.OK)
-	@ResponseBody
 	public ShoppingListItemGetDTO patchItemBoughtStatus(Authentication auth, @PathVariable Long itemId,
 			@RequestBody ItemPatchDTO dto) {
 		Group group = groupService.getGroupOfUser(auth.getName());

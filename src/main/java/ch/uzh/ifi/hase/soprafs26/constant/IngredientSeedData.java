@@ -1,7 +1,6 @@
 package ch.uzh.ifi.hase.soprafs26.constant;
 
 import java.util.List;
-import ch.uzh.ifi.hase.soprafs26.constant.Unit;
 
 public class IngredientSeedData {
     public static final List<IngredientData> INGREDIENTS = List.of(
@@ -134,36 +133,10 @@ public class IngredientSeedData {
             new IngredientData("Baking Soda", List.of(), IngredientCategory.BAKING, Unit.GRAM),
             new IngredientData("Vanilla Extract", List.of(), IngredientCategory.BAKING, Unit.MILLILITER)
     );
-    public static class IngredientData {
 
-    private final String name;
-    private final List<String> aliases;
-        private final IngredientCategory category;
-    private final Unit unit;
+    public record IngredientData(String name, List<String> aliases, IngredientCategory category, Unit unit) {
 
-    public IngredientData(String name, List<String> aliases, IngredientCategory category, Unit unit) {
-        this.name = name;
-        this.aliases = aliases;
-        this.unit = unit;
-        this.category = category;
     }
-
-    public String getName() {
-        return name;
-    }
-
-    public List<String> getAliases() {
-        return aliases;
-    }
-
-    public IngredientCategory getCategory() {
-        return category;
-    }
-
-    public Unit getUnit() {
-            return unit;
-        }
-}
 
 }
 
