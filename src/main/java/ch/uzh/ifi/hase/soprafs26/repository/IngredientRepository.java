@@ -10,7 +10,7 @@ import java.util.List;
 
 @Repository("ingredientRepository")
 public interface IngredientRepository extends JpaRepository<Ingredient, Long> {
-	Optional<Ingredient> findByIngredientNameIgnoreCase(String ingredientName);
+	List<Ingredient> findByIngredientNameIgnoreCase(String ingredientName);
 	Optional<Ingredient> findByIngredientNameIgnoreCaseAndUser(String ingredientName, User user);
 	List<Ingredient> findAllByUser(User user);
 }

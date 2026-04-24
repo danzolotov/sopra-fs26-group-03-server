@@ -151,7 +151,7 @@ if (candidateName.isBlank()) {
 return null;
 }
 
-Ingredient existingByName = ingredientRepository.findByIngredientNameIgnoreCase(candidateName).orElse(null);
+Ingredient existingByName = ingredientRepository.findByIngredientNameIgnoreCase(candidateName).stream().findFirst().orElse(null);
 if (existingByName != null) {
 return existingByName;
 }
