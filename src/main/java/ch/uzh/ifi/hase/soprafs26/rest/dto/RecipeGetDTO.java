@@ -6,7 +6,7 @@ public class RecipeGetDTO {
     private Long id;
     private String name;
     private String description;
-    private List<IngredientGetDTO> ingredients;
+    private List<IngredientDataGetDTO> ingredients;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -14,6 +14,6 @@ public class RecipeGetDTO {
     public void setName(String name) { this.name = name; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
-    public List<IngredientGetDTO> getIngredients() { return ingredients; }
-    public void setIngredients(List<IngredientGetDTO> ingredients) { this.ingredients = ingredients; }
+    public List<IngredientDataGetDTO> getIngredients() { return ingredients; }
+    public void setIngredients(List<IngredientDataGetDTO> ingredients) { this.ingredients = ingredients; }
 }
