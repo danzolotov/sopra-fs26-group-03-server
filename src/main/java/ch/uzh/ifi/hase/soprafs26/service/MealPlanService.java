@@ -131,10 +131,8 @@ public class MealPlanService {
         Map<Ingredient, Integer> missing = getMissingIngredients(userID, start, end);
         for (Map.Entry<Ingredient, Integer> entry : missing.entrySet()) {
             Ingredient reqIng = entry.getKey();
-            // Find or create a base ingredient (recipeId=null) for the shopping list
             Ingredient baseIng = ingredientRepository.findByIngredientNameIgnoreCase(reqIng.getIngredientName())
                 .stream()
-                .filter(i -> i.getRecipe() == null)
                 .findFirst()
                 .orElseGet(() -> {
                     Ingredient ni = new Ingredient();

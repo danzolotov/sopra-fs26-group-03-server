@@ -41,7 +41,24 @@ this.ingredientRepository = ingredientRepository;
 		if (user == null) {
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User must be authenticated");
 		}
-		return ingredientRepository.findAllByUser(user);
+
+		List<Ingredient> userDefined = ingredientRepository.findAllByUser(user);
+		List<Ingredient> globalIngredients = ingredientRepository.findAllByUserIsNull();
+
+		Map<String, Ingredient> userDefinedByName = new LinkedHashMap<>();
+		for (Ingredient ing : userDefined) {
+			userDefinedByName.put(ing.getIngredientName().toLowerCase(Locale.ROOT), ing);
+		}
+
+		List<Ingredient> result = new ArrayList<>(userDefined);
+		for (Ingredient globalIng : globalIngredients) {
+			String nameKey = globalIng.getIngredientName().toLowerCase(Locale.ROOT);
+			if (!userDefinedByName.containsKey(nameKey)) {
+				result.add(globalIng);
+			}
+		}
+		
+		return result;
 	}
 
 	public Ingredient createIngredient(Ingredient ingredient) {
@@ -70,14 +87,20 @@ this.ingredientRepository = ingredientRepository;
 		return ingredientRepository.saveAndFlush(ingredient);
 	}
 
-	public void seedIngredients(User user) {
+    // This seeds the database with about 50 common ingredients
+	public void seedIngredients() {
+		List<Ingredient> existing = ingredientRepository.findAllByUserIsNull();
+		if (!existing.isEmpty()) {
+			return;
+		}
+		
 		for (IngredientSeedData.IngredientData seed : IngredientSeedData.INGREDIENTS) {
 			Ingredient ingredient = new Ingredient();
 			ingredient.setIngredientName(seed.name());
             ingredient.setCategory(seed.category());
 			ingredient.setIngredientDescription("");
 			ingredient.setUnit(seed.unit());
-            ingredient.setUser(user);
+            ingredient.setUser(null); // Global - not owned by any user
 			ingredientRepository.save(ingredient);
 		}
 		ingredientRepository.flush();
