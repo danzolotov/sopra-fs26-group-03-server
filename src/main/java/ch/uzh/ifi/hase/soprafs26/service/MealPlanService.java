@@ -138,6 +138,11 @@ public class MealPlanService {
                     Ingredient ni = new Ingredient();
                     ni.setIngredientName(reqIng.getIngredientName());
                     ni.setUnit(reqIng.getUnit());
+                    if (reqIng.getCategory() != null) {
+                        ni.setCategory(reqIng.getCategory());
+                    } else {
+                        ni.setCategory(ch.uzh.ifi.hase.soprafs26.constant.IngredientCategory.OTHER);
+                    }
                     return ingredientRepository.save(ni);
                 });
             
