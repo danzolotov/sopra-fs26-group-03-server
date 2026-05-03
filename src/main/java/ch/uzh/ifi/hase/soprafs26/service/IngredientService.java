@@ -160,6 +160,16 @@ Ingredient ingredient = new Ingredient();
 ingredient.setIngredientName(candidateName);
 ingredient.setIngredientDescription("");
 ingredient.setUnit(Unit.PIECE);
+ingredient.setCategory(ch.uzh.ifi.hase.soprafs26.constant.IngredientCategory.OTHER);
+
+for (ch.uzh.ifi.hase.soprafs26.constant.IngredientSeedData.IngredientData seed : ch.uzh.ifi.hase.soprafs26.constant.IngredientSeedData.INGREDIENTS) {
+    if (seed.name().equalsIgnoreCase(candidateName)) {
+        ingredient.setCategory(seed.category());
+        ingredient.setUnit(seed.unit());
+        break;
+    }
+}
+
 return ingredientRepository.saveAndFlush(ingredient);
 }
 

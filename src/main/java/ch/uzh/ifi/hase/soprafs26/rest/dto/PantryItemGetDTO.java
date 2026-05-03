@@ -8,6 +8,7 @@ public class PantryItemGetDTO {
 	private Long ingredientId;
 	private String ingredientName;
 	private Unit unit;
+    private ch.uzh.ifi.hase.soprafs26.constant.IngredientCategory category;
 
 	public Long getId() { return id; }
 	public void setId(Long id) { this.id = id; }
@@ -19,4 +20,12 @@ public class PantryItemGetDTO {
 	public void setIngredientName(String ingredientName) { this.ingredientName = ingredientName; }
 	public Unit getUnit() { return unit; }
 	public void setUnit(Unit unit) { this.unit = unit; }
+
+    public ch.uzh.ifi.hase.soprafs26.constant.IngredientCategory getCategory() {
+        return category;
+    }
+
+    public void setCategory(ch.uzh.ifi.hase.soprafs26.constant.IngredientCategory category) {
+        this.category = category;
+    }
 }
