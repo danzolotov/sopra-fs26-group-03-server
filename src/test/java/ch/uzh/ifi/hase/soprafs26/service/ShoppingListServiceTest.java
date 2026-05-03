@@ -1,5 +1,7 @@
 package ch.uzh.ifi.hase.soprafs26.service;
 
+import ch.uzh.ifi.hase.soprafs26.constant.IngredientCategory;
+import ch.uzh.ifi.hase.soprafs26.constant.Unit;
 import ch.uzh.ifi.hase.soprafs26.entity.*;
 import ch.uzh.ifi.hase.soprafs26.repository.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,6 +53,8 @@ public class ShoppingListServiceTest {
 		testIngredient = new Ingredient();
 		testIngredient.setId(100L);
 		testIngredient.setIngredientName("Milk");
+		testIngredient.setUnit(Unit.PIECE);
+		testIngredient.setCategory(IngredientCategory.DAIRY);
 	}
 
 	@Test
@@ -83,6 +87,58 @@ public class ShoppingListServiceTest {
 
 		assertEquals(3, result.getQuantity());
 		assertEquals(existing, result);
+	}
+
+	@Test
+	public void addItemToList_inlineIngredient_createsIngredient() {
+		when(shoppingListRepository.findById(1L)).thenReturn(Optional.of(testList));
+		when(ingredientRepository.findByIngredientNameIgnoreCase("Yogurt")).thenReturn(java.util.Collections.emptyList());
+		when(ingredientRepository.saveAndFlush(any(Ingredient.class))).thenAnswer(invocation -> {
+			Ingredient ingredient = invocation.getArgument(0);
+			ingredient.setId(200L);
+			return ingredient;
+		});
+		when(shoppingListItemRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+		ShoppingListItem result = shoppingListService.addItemToList(1L, null, "Yogurt", "Plain yogurt",
+				Unit.GRAM, IngredientCategory.DAIRY, 2);
+
+		assertEquals("Yogurt", result.getIngredient().getIngredientName());
+		assertEquals(Unit.GRAM, result.getIngredient().getUnit());
+		assertEquals(IngredientCategory.DAIRY, result.getIngredient().getCategory());
+		assertFalse(result.getIsBought());
+	}
+
+	@Test
+	public void addItemToList_inlineIngredient_existingName_reusesIngredient() {
+		when(shoppingListRepository.findById(1L)).thenReturn(Optional.of(testList));
+		when(ingredientRepository.findByIngredientNameIgnoreCase("Milk")).thenReturn(java.util.Collections.singletonList(testIngredient));
+		when(shoppingListItemRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+		ShoppingListItem result = shoppingListService.addItemToList(1L, null, "Milk", null,
+				Unit.PIECE, IngredientCategory.DAIRY, 2);
+
+		assertEquals(testIngredient, result.getIngredient());
+		verify(ingredientRepository, never()).saveAndFlush(any(Ingredient.class));
+	}
+
+	@Test
+	public void addItemToList_existingId_fillsMissingCategory() {
+		Ingredient ingredientWithoutCategory = new Ingredient();
+		ingredientWithoutCategory.setId(300L);
+		ingredientWithoutCategory.setIngredientName("Cheese");
+		ingredientWithoutCategory.setUnit(Unit.PIECE);
+
+		when(shoppingListRepository.findById(1L)).thenReturn(Optional.of(testList));
+		when(ingredientRepository.findById(300L)).thenReturn(Optional.of(ingredientWithoutCategory));
+		when(ingredientRepository.saveAndFlush(any(Ingredient.class))).thenAnswer(invocation -> invocation.getArgument(0));
+		when(shoppingListItemRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+		ShoppingListItem result = shoppingListService.addItemToList(1L, 300L, null, null,
+				null, IngredientCategory.DAIRY, 1);
+
+		assertEquals(IngredientCategory.DAIRY, result.getIngredient().getCategory());
+		verify(ingredientRepository).saveAndFlush(ingredientWithoutCategory);
 	}
 
 	@Test

@@ -93,8 +93,8 @@ public class ShoppingListController {
 	public ShoppingListItemGetDTO addItem(Authentication auth, @RequestBody ShoppingListItemPostDTO dto) {
 		Group group = groupService.getGroupOfUser(auth.getName());
 		ShoppingList list = shoppingListService.getShoppingListByGroupId(group.getId());
-		ShoppingListItem item = shoppingListService.addItemToList(
-				list.getId(), dto.getIngredientId(), dto.getQuantity());
+		ShoppingListItem item = shoppingListService.addItemToList(list.getId(), dto.getIngredientId(), dto.getIngredientName(),
+				dto.getIngredientDescription(), dto.getStandardUnit(), dto.getCategory(), dto.getQuantity());
 		return DTOMapper.INSTANCE.convertEntityToShoppingListItemGetDTO(item);
 	}
 

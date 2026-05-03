@@ -93,7 +93,7 @@ this.ingredientRepository = ingredientRepository;
 		if (!existing.isEmpty()) {
 			return;
 		}
-		
+
 		for (IngredientSeedData.IngredientData seed : IngredientSeedData.INGREDIENTS) {
 			Ingredient ingredient = new Ingredient();
 			ingredient.setIngredientName(seed.name());

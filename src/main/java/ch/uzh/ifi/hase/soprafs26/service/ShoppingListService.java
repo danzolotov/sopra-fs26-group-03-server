@@ -1,5 +1,7 @@
 package ch.uzh.ifi.hase.soprafs26.service;
 
+import ch.uzh.ifi.hase.soprafs26.constant.IngredientCategory;
+import ch.uzh.ifi.hase.soprafs26.constant.Unit;
 import ch.uzh.ifi.hase.soprafs26.entity.*;
 import ch.uzh.ifi.hase.soprafs26.repository.*;
 import org.slf4j.Logger;
@@ -47,17 +49,24 @@ public class ShoppingListService {
 	}
 
 	public ShoppingListItem addItemToList(Long listId, Long ingredientId, Integer quantity) {
+		return addItemToList(listId, ingredientId, null, null, null, null, quantity);
+	}
+
+	public ShoppingListItem addItemToList(Long listId, Long ingredientId, String ingredientName,
+			String ingredientDescription, Unit standardUnit, IngredientCategory category, Integer quantity) {
+		if (quantity == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Quantity must be provided");
+		}
 		ShoppingList list = shoppingListRepository.findById(listId)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shopping list not found"));
-		Ingredient ingredient = ingredientRepository.findById(ingredientId)
-				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ingredient not found"));
+		Ingredient ingredient = resolveIngredient(ingredientId, ingredientName, ingredientDescription, standardUnit, category);
 
 		for (ShoppingListItem existing : list.getItems()) {
-			if (existing.getIngredient().getId().equals(ingredientId) && Boolean.FALSE.equals(existing.getIsBought())) {
+			if (existing.getIngredient().getId().equals(ingredient.getId()) && Boolean.FALSE.equals(existing.getIsBought())) {
 				existing.setQuantity(existing.getQuantity() + quantity);
 				shoppingListItemRepository.save(existing);
 				shoppingListItemRepository.flush();
-				log.debug("Merged quantity for ingredient {} in shopping list {}", ingredientId, listId);
+				log.debug("Merged quantity for ingredient {} in shopping list {}", ingredient.getId(), listId);
 				return existing;
 			}
 		}
@@ -71,8 +80,58 @@ public class ShoppingListService {
 
 		item = shoppingListItemRepository.save(item);
 		shoppingListItemRepository.flush();
-		log.debug("Added ingredient {} to shopping list {}", ingredientId, listId);
+		log.debug("Added ingredient {} to shopping list {}", ingredient.getId(), listId);
 		return item;
+	}
+
+	private Ingredient resolveIngredient(Long ingredientId, String ingredientName, String ingredientDescription,
+			Unit standardUnit, IngredientCategory category) {
+		if (ingredientId != null) {
+			Ingredient ingredient = ingredientRepository.findById(ingredientId)
+					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ingredient not found"));
+			return fillMissingIngredientDetails(ingredient, ingredientDescription, standardUnit, category);
+		}
+
+		if (ingredientName == null || ingredientName.trim().isEmpty()) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ingredient name must be provided");
+		}
+
+		String normalizedName = ingredientName.trim();
+		Ingredient existing = ingredientRepository.findByIngredientNameIgnoreCase(normalizedName).stream()
+				.findFirst()
+				.orElse(null);
+		if (existing != null) {
+			return fillMissingIngredientDetails(existing, ingredientDescription, standardUnit, category);
+		}
+		if (standardUnit == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ingredient standardUnit must be provided");
+		}
+
+		Ingredient ingredient = new Ingredient();
+		ingredient.setIngredientName(normalizedName);
+		ingredient.setIngredientDescription(ingredientDescription);
+		ingredient.setUnit(standardUnit);
+		ingredient.setCategory(category);
+		return ingredientRepository.saveAndFlush(ingredient);
+	}
+
+	private Ingredient fillMissingIngredientDetails(Ingredient ingredient, String ingredientDescription,
+			Unit standardUnit, IngredientCategory category) {
+		boolean changed = false;
+		if ((ingredient.getIngredientDescription() == null || ingredient.getIngredientDescription().isBlank())
+				&& ingredientDescription != null) {
+			ingredient.setIngredientDescription(ingredientDescription);
+			changed = true;
+		}
+		if (ingredient.getUnit() == null && standardUnit != null) {
+			ingredient.setUnit(standardUnit);
+			changed = true;
+		}
+		if (ingredient.getCategory() == null && category != null) {
+			ingredient.setCategory(category);
+			changed = true;
+		}
+		return changed ? ingredientRepository.saveAndFlush(ingredient) : ingredient;
 	}
 
 	public ShoppingListItem getItemById(Long itemId) {
