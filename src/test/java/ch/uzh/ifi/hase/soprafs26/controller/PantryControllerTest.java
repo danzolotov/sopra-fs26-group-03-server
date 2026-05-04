@@ -92,7 +92,7 @@ public class PantryControllerTest {
 
 		given(groupService.getGroupOfUser("user-1")).willReturn(testGroup);
 		given(pantryService.getPantryByGroupId(1L)).willReturn(testPantry);
-		given(pantryService.addItemToPantry(10L, 100L, 5)).willReturn(testItem);
+		given(pantryService.addItemToPantry(10L, 100L, null, null, null, null, 5)).willReturn(testItem);
 
 		mockMvc.perform(post("/groups/me/pantry/items")
 						.principal(new UsernamePasswordAuthenticationToken("user-1", null))

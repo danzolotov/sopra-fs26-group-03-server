@@ -93,7 +93,7 @@ this.ingredientRepository = ingredientRepository;
 		if (!existing.isEmpty()) {
 			return;
 		}
-		
+
 		for (IngredientSeedData.IngredientData seed : IngredientSeedData.INGREDIENTS) {
 			Ingredient ingredient = new Ingredient();
 			ingredient.setIngredientName(seed.name());
@@ -133,7 +133,7 @@ matched));
 return results;
 }
 
-public List<Ingredient> resolveOrCreateDetectedIngredients(List<String> foundIngredients) {
+public List<Ingredient> resolveOrCreateDetectedIngredients(List<String> foundIngredients, User user) {
 if (foundIngredients == null || foundIngredients.isEmpty()) {
 return List.of();
 }
@@ -142,7 +142,7 @@ List<IngredientAutocompleteResult> matches = autocompleteIngredients(foundIngred
 Map<String, Ingredient> uniqueIngredientsByName = new LinkedHashMap<>();
 
 for (IngredientAutocompleteResult match : matches) {
-Ingredient ingredient = resolveOrCreateIngredient(match);
+Ingredient ingredient = resolveOrCreateIngredient(match, user);
 if (ingredient != null) {
 uniqueIngredientsByName.putIfAbsent(ingredient.getIngredientName().toLowerCase(Locale.ROOT), ingredient);
 }
@@ -151,7 +151,7 @@ uniqueIngredientsByName.putIfAbsent(ingredient.getIngredientName().toLowerCase(L
 return new ArrayList<>(uniqueIngredientsByName.values());
 }
 
-public Ingredient resolveOrCreateDetectedIngredient(String foundIngredient) {
+public Ingredient resolveOrCreateDetectedIngredient(String foundIngredient, User user) {
 if (foundIngredient == null || foundIngredient.isBlank()) {
 return null;
 }
@@ -160,29 +160,50 @@ List<IngredientAutocompleteResult> matches = autocompleteIngredients(List.of(fou
 if (matches.isEmpty()) {
 return null;
 }
-return resolveOrCreateIngredient(matches.get(0));
+return resolveOrCreateIngredient(matches.get(0), user);
 }
 
-private Ingredient resolveOrCreateIngredient(IngredientAutocompleteResult match) {
+private Ingredient resolveOrCreateIngredient(IngredientAutocompleteResult match, User user) {
 Ingredient byId = resolveById(match.ingredientId());
-if (byId != null) {
-return byId;
+if ((byId != null) && (byId.getUser() == null || (user != null && byId.getUser().getUserID().equals(user.getUserID())))) {
+		return byId;
 }
 
 String candidateName = deriveIngredientName(match);
 if (candidateName.isBlank()) {
-return null;
+	return null;
 }
 
-Ingredient existingByName = ingredientRepository.findByIngredientNameIgnoreCase(candidateName).stream().findFirst().orElse(null);
+if (user != null) {
+	Ingredient byUser = ingredientRepository.findByIngredientNameIgnoreCaseAndUser(candidateName, user).orElse(null);
+	if (byUser != null) {
+		return byUser;
+	}
+}
+
+Ingredient existingByName = ingredientRepository.findByIngredientNameIgnoreCase(candidateName).stream()
+		.filter(i -> i.getUser() == null)
+		.findFirst()
+		.orElse(null);
 if (existingByName != null) {
-return existingByName;
+	return existingByName;
 }
 
 Ingredient ingredient = new Ingredient();
 ingredient.setIngredientName(candidateName);
 ingredient.setIngredientDescription("");
 ingredient.setUnit(Unit.PIECE);
+ingredient.setCategory(ch.uzh.ifi.hase.soprafs26.constant.IngredientCategory.OTHER);
+ingredient.setUser(user); // Associate the newly created ingredient with the requesting user (null => global)
+
+for (ch.uzh.ifi.hase.soprafs26.constant.IngredientSeedData.IngredientData seed : ch.uzh.ifi.hase.soprafs26.constant.IngredientSeedData.INGREDIENTS) {
+	if (seed.name().equalsIgnoreCase(candidateName)) {
+		ingredient.setCategory(seed.category());
+		ingredient.setUnit(seed.unit());
+		break;
+	}
+}
+
 return ingredientRepository.saveAndFlush(ingredient);
 }
 

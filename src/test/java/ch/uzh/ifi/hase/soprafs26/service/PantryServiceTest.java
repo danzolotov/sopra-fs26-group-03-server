@@ -1,5 +1,7 @@
 package ch.uzh.ifi.hase.soprafs26.service;
 
+import ch.uzh.ifi.hase.soprafs26.constant.IngredientCategory;
+import ch.uzh.ifi.hase.soprafs26.constant.Unit;
 import ch.uzh.ifi.hase.soprafs26.entity.Ingredient;
 import ch.uzh.ifi.hase.soprafs26.entity.Pantry;
 import ch.uzh.ifi.hase.soprafs26.entity.PantryItem;
@@ -49,6 +51,8 @@ public class PantryServiceTest {
 		testIngredient = new Ingredient();
 		testIngredient.setId(100L);
 		testIngredient.setIngredientName("Apple");
+		testIngredient.setUnit(Unit.PIECE);
+		testIngredient.setCategory(IngredientCategory.FRUIT);
 	}
 
 	@Test
@@ -97,6 +101,59 @@ public class PantryServiceTest {
 		assertEquals(8, result.getQuantity());
 		assertEquals(existingItem, result);
 		verify(pantryItemRepository, times(1)).save(existingItem);
+	}
+
+	@Test
+	public void addItemToPantry_inlineIngredient_createsIngredient() {
+		when(pantryRepository.findById(1L)).thenReturn(Optional.of(testPantry));
+		when(ingredientRepository.findByIngredientNameIgnoreCase("Carrot")).thenReturn(java.util.Collections.emptyList());
+		when(ingredientRepository.saveAndFlush(any(Ingredient.class))).thenAnswer(invocation -> {
+			Ingredient ingredient = invocation.getArgument(0);
+			ingredient.setId(200L);
+			return ingredient;
+		});
+		when(pantryItemRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+		PantryItem result = pantryService.addItemToPantry(1L, null, "Carrot", "Orange root",
+				Unit.GRAM, IngredientCategory.VEGETABLE, 4);
+
+		assertEquals("Carrot", result.getIngredient().getIngredientName());
+		assertEquals(Unit.GRAM, result.getIngredient().getUnit());
+		assertEquals(IngredientCategory.VEGETABLE, result.getIngredient().getCategory());
+		assertEquals(4, result.getQuantity());
+		verify(ingredientRepository).saveAndFlush(any(Ingredient.class));
+	}
+
+	@Test
+	public void addItemToPantry_inlineIngredient_existingName_reusesIngredient() {
+		when(pantryRepository.findById(1L)).thenReturn(Optional.of(testPantry));
+		when(ingredientRepository.findByIngredientNameIgnoreCase("Apple")).thenReturn(java.util.Collections.singletonList(testIngredient));
+		when(pantryItemRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+		PantryItem result = pantryService.addItemToPantry(1L, null, "Apple", null,
+				Unit.PIECE, IngredientCategory.FRUIT, 2);
+
+		assertEquals(testIngredient, result.getIngredient());
+		verify(ingredientRepository, never()).saveAndFlush(any(Ingredient.class));
+	}
+
+	@Test
+	public void addItemToPantry_existingId_fillsMissingCategory() {
+		Ingredient ingredientWithoutCategory = new Ingredient();
+		ingredientWithoutCategory.setId(300L);
+		ingredientWithoutCategory.setIngredientName("Pepper");
+		ingredientWithoutCategory.setUnit(Unit.PIECE);
+
+		when(pantryRepository.findById(1L)).thenReturn(Optional.of(testPantry));
+		when(ingredientRepository.findById(300L)).thenReturn(Optional.of(ingredientWithoutCategory));
+		when(ingredientRepository.saveAndFlush(any(Ingredient.class))).thenAnswer(invocation -> invocation.getArgument(0));
+		when(pantryItemRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+		PantryItem result = pantryService.addItemToPantry(1L, 300L, null, null,
+				null, IngredientCategory.VEGETABLE, 1);
+
+		assertEquals(IngredientCategory.VEGETABLE, result.getIngredient().getCategory());
+		verify(ingredientRepository).saveAndFlush(ingredientWithoutCategory);
 	}
 
 	@Test

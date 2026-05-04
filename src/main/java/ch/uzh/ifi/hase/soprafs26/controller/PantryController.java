@@ -37,8 +37,8 @@ public class PantryController {
 	public PantryItemGetDTO addItem(Authentication auth, @RequestBody PantryItemPostDTO dto) {
 		Group group = groupService.getGroupOfUser(auth.getName());
 		Pantry pantry = pantryService.getPantryByGroupId(group.getId());
-		PantryItem item = pantryService.addItemToPantry(
-				pantry.getId(), dto.getIngredientId(), dto.getQuantity());
+		PantryItem item = pantryService.addItemToPantry(pantry.getId(), dto.getIngredientId(), dto.getIngredientName(),
+				dto.getIngredientDescription(), dto.getStandardUnit(), dto.getCategory(), dto.getQuantity());
 		return DTOMapper.INSTANCE.convertEntityToPantryItemGetDTO(item);
 	}
 

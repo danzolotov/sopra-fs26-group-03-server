@@ -89,7 +89,7 @@ public class ShoppingListControllerTest {
 
 		given(groupService.getGroupOfUser("user-1")).willReturn(testGroup);
 		given(shoppingListService.getShoppingListByGroupId(1L)).willReturn(testList);
-		given(shoppingListService.addItemToList(10L, 100L, 2)).willReturn(testItem);
+		given(shoppingListService.addItemToList(10L, 100L, null, null, null, null, 2)).willReturn(testItem);
 
 		mockMvc.perform(post("/groups/me/shopping-list/items")
 						.principal(new UsernamePasswordAuthenticationToken("user-1", null))
