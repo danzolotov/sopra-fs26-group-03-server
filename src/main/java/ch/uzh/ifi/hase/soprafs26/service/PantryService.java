@@ -100,7 +100,7 @@ public class PantryService {
 		ingredient.setIngredientName(normalizedName);
 		ingredient.setIngredientDescription(ingredientDescription);
 		ingredient.setUnit(standardUnit);
-		ingredient.setCategory(category);
+		ingredient.setCategory(category != null ? category : IngredientCategory.OTHER);
 		return ingredientRepository.saveAndFlush(ingredient);
 	}
 
