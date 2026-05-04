@@ -145,6 +145,15 @@ public class MealPlanService {
                     }
                     return ingredientRepository.save(ni);
                 });
+
+            if (baseIng.getCategory() == null) {
+                if (reqIng.getCategory() != null) {
+                    baseIng.setCategory(reqIng.getCategory());
+                } else {
+                    baseIng.setCategory(ch.uzh.ifi.hase.soprafs26.constant.IngredientCategory.OTHER);
+                }
+                baseIng = ingredientRepository.save(baseIng);
+            }
             
             shoppingListService.addItemToList(list.getId(), baseIng.getId(), entry.getValue());
         }
