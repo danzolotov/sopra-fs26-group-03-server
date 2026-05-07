@@ -68,6 +68,16 @@ import static org.junit.jupiter.api.Assertions.*;
 	}
 
 	@Test
+	void createUser_duplicateUsername_throwsException() {
+		userService.createUser(testUser);
+		Mockito.when(userRepository.findByEmail(Mockito.any())).thenReturn(null);
+		Mockito.when(userRepository.findByUsername(Mockito.any())).thenReturn(testUser);
+
+		assertThrows(ResponseStatusException.class, () -> userService.createUser(testUser));
+	}
+
+
+	@Test
 	 void createUser_duplicateInputs_throwsException() {
 		userService.createUser(testUser);
 		Mockito.when(userRepository.findByEmail(Mockito.any())).thenReturn(testUser);
