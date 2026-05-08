@@ -42,7 +42,7 @@ public class MealPlanService {
     }
 
     public List<MealPlan> getMealPlans(String userID, LocalDate start, LocalDate end) {
-        List<MealPlan> plans = mealPlanRepository.findByUserIDAndDateBetween(userID, start, end);
+        List<MealPlan> plans = new ArrayList<>(mealPlanRepository.findByUserIDAndDateBetween(userID, start, end));
         
         try {
             Group group = groupService.getGroupOfUser(userID);
