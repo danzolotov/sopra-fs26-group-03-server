@@ -185,6 +185,7 @@ public class MealPlanServiceTest {
         baseIng.setIngredientName("Pasta");
         when(ingredientRepository.findByIngredientNameIgnoreCase("Pasta"))
                 .thenReturn(Collections.singletonList(baseIng));
+        when(ingredientRepository.save(any())).thenReturn(baseIng);
 
         mealPlanService.syncToShoppingList("user-1", now, now);
 
