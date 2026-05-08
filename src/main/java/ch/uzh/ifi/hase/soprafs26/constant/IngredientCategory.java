@@ -14,5 +14,6 @@ public enum IngredientCategory {
     HERB,
     SPICE,
     OIL,
-    CONDIMENT
+    CONDIMENT,
+    OTHER
 }

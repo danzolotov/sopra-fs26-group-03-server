@@ -28,14 +28,17 @@ public class ShoppingListController {
 	private final GroupService groupService;
 	private final ShoppingListAutoDetectService shoppingListAutoDetectService;
 	private final IngredientService ingredientService;
+	private final ch.uzh.ifi.hase.soprafs26.service.UserService userService;
 
 	@Autowired
 	public ShoppingListController(ShoppingListService shoppingListService, GroupService groupService,
-			ShoppingListAutoDetectService shoppingListAutoDetectService, IngredientService ingredientService) {
+			ShoppingListAutoDetectService shoppingListAutoDetectService, IngredientService ingredientService,
+			ch.uzh.ifi.hase.soprafs26.service.UserService userService) {
 		this.shoppingListService = shoppingListService;
 		this.groupService = groupService;
 		this.shoppingListAutoDetectService = shoppingListAutoDetectService;
 		this.ingredientService = ingredientService;
+		this.userService = userService;
 	}
 
 	@PostMapping(value = "/shoppings-list/auto-detect", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -52,7 +55,9 @@ public class ShoppingListController {
 
 			Map<String, AutoDetectedIngredientGetDTO> aggregated = new LinkedHashMap<>();
 			for (ShoppingListAutoDetectService.DetectedShoppingItem detectedItem : detectedItems) {
-				Ingredient ingredient = ingredientService.resolveOrCreateDetectedIngredient(detectedItem.ingredientName());
+				// Resolve current user and forward to ingredient service so created ingredients are user-scoped
+				User currentUser = userService.getUserByUsername(auth.getName());
+				Ingredient ingredient = ingredientService.resolveOrCreateDetectedIngredient(detectedItem.ingredientName(), currentUser);
 				if (ingredient == null) {
 					continue;
 				}
@@ -93,8 +98,8 @@ public class ShoppingListController {
 	public ShoppingListItemGetDTO addItem(Authentication auth, @RequestBody ShoppingListItemPostDTO dto) {
 		Group group = groupService.getGroupOfUser(auth.getName());
 		ShoppingList list = shoppingListService.getShoppingListByGroupId(group.getId());
-		ShoppingListItem item = shoppingListService.addItemToList(
-				list.getId(), dto.getIngredientId(), dto.getQuantity());
+		ShoppingListItem item = shoppingListService.addItemToList(list.getId(), dto.getIngredientId(), dto.getIngredientName(),
+				dto.getIngredientDescription(), dto.getStandardUnit(), dto.getCategory(), dto.getQuantity());
 		return DTOMapper.INSTANCE.convertEntityToShoppingListItemGetDTO(item);
 	}
 

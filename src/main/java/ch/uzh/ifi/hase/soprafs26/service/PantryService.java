@@ -1,5 +1,7 @@
 package ch.uzh.ifi.hase.soprafs26.service;
 
+import ch.uzh.ifi.hase.soprafs26.constant.IngredientCategory;
+import ch.uzh.ifi.hase.soprafs26.constant.Unit;
 import ch.uzh.ifi.hase.soprafs26.entity.*;
 import ch.uzh.ifi.hase.soprafs26.repository.*;
 import org.slf4j.Logger;
@@ -38,17 +40,24 @@ public class PantryService {
 	}
 
 	public PantryItem addItemToPantry(Long pantryId, Long ingredientId, Integer quantity) {
+		return addItemToPantry(pantryId, ingredientId, null, null, null, null, quantity);
+	}
+
+	public PantryItem addItemToPantry(Long pantryId, Long ingredientId, String ingredientName,
+			String ingredientDescription, Unit standardUnit, IngredientCategory category, Integer quantity) {
+		if (quantity == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Quantity must be provided");
+		}
 		Pantry pantry = pantryRepository.findById(pantryId)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pantry not found"));
-		Ingredient ingredient = ingredientRepository.findById(ingredientId)
-				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ingredient not found"));
+		Ingredient ingredient = resolveIngredient(ingredientId, ingredientName, ingredientDescription, standardUnit, category);
 
 		for (PantryItem existing : pantry.getItems()) {
-			if (existing.getIngredient().getId().equals(ingredientId)) {
+			if (existing.getIngredient().getId().equals(ingredient.getId())) {
 				existing.setQuantity(existing.getQuantity() + quantity);
 				pantryItemRepository.save(existing);
 				pantryItemRepository.flush();
-				log.debug("Merged quantity for ingredient {} in pantry {}", ingredientId, pantryId);
+				log.debug("Merged quantity for ingredient {} in pantry {}", ingredient.getId(), pantryId);
 				return existing;
 			}
 		}
@@ -60,8 +69,58 @@ public class PantryService {
 		pantry.getItems().add(newItem);
 		newItem = pantryItemRepository.save(newItem);
 		pantryItemRepository.flush();
-		log.debug("Added ingredient {} to pantry {}", ingredientId, pantryId);
+		log.debug("Added ingredient {} to pantry {}", ingredient.getId(), pantryId);
 		return newItem;
+	}
+
+	private Ingredient resolveIngredient(Long ingredientId, String ingredientName, String ingredientDescription,
+			Unit standardUnit, IngredientCategory category) {
+		if (ingredientId != null) {
+			Ingredient ingredient = ingredientRepository.findById(ingredientId)
+					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ingredient not found"));
+			return fillMissingIngredientDetails(ingredient, ingredientDescription, standardUnit, category);
+		}
+
+		if (ingredientName == null || ingredientName.trim().isEmpty()) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ingredient name must be provided");
+		}
+
+		String normalizedName = ingredientName.trim();
+		Ingredient existing = ingredientRepository.findByIngredientNameIgnoreCase(normalizedName).stream()
+				.findFirst()
+				.orElse(null);
+		if (existing != null) {
+			return fillMissingIngredientDetails(existing, ingredientDescription, standardUnit, category);
+		}
+		if (standardUnit == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ingredient standardUnit must be provided");
+		}
+
+		Ingredient ingredient = new Ingredient();
+		ingredient.setIngredientName(normalizedName);
+		ingredient.setIngredientDescription(ingredientDescription);
+		ingredient.setUnit(standardUnit);
+		ingredient.setCategory(category != null ? category : IngredientCategory.OTHER);
+		return ingredientRepository.saveAndFlush(ingredient);
+	}
+
+	private Ingredient fillMissingIngredientDetails(Ingredient ingredient, String ingredientDescription,
+			Unit standardUnit, IngredientCategory category) {
+		boolean changed = false;
+		if ((ingredient.getIngredientDescription() == null || ingredient.getIngredientDescription().isBlank())
+				&& ingredientDescription != null) {
+			ingredient.setIngredientDescription(ingredientDescription);
+			changed = true;
+		}
+		if (ingredient.getUnit() == null && standardUnit != null) {
+			ingredient.setUnit(standardUnit);
+			changed = true;
+		}
+		if (ingredient.getCategory() == null && category != null) {
+			ingredient.setCategory(category);
+			changed = true;
+		}
+		return changed ? ingredientRepository.saveAndFlush(ingredient) : ingredient;
 	}
 
 	public PantryItem getItemById(Long itemId) {

@@ -84,6 +84,7 @@ public interface DTOMapper {
 	@Mapping(source = "ingredient.id", target = "ingredientId")
 	@Mapping(source = "ingredient.ingredientName", target = "ingredientName")
 	@Mapping(source = "ingredient.unit", target = "unit")
+    @Mapping(source = "ingredient.category", target = "category")
 	PantryItemGetDTO convertEntityToPantryItemGetDTO(PantryItem pantryItem);
 
 	// ─── Ingredient mappings ────────────────────────
@@ -91,15 +92,23 @@ public interface DTOMapper {
 	@BeanMapping(ignoreByDefault = true)
 	@Mapping(source = "ingredientName", target = "ingredientName")
 	@Mapping(source = "ingredientDescription", target = "ingredientDescription")
-	@Mapping(source = "unit", target = "unit")
+	@Mapping(source = "standardUnit", target = "unit")
 	@Mapping(source = "category", target = "category")
 	Ingredient convertIngredientPostDTOtoEntity(IngredientPostDTO ingredientPostDTO);
 
 	@Mapping(source = "id", target = "id")
+	@Mapping(source = "id", target = "ingredientId")
 	@Mapping(source = "ingredientName", target = "ingredientName")
 	@Mapping(source = "ingredientDescription", target = "ingredientDescription")
-	@Mapping(source = "unit", target = "unit")
+	@Mapping(source = "category", target = "category")
 	@Mapping(source = "quantity", target = "quantity")
+	@Mapping(source = "unit", target = "standardUnit")
+	IngredientDataGetDTO convertEntityToIngredientDataGetDTO(Ingredient ingredient);
+
+	@Mapping(source = "id", target = "id")
+	@Mapping(source = "ingredientName", target = "ingredientName")
+	@Mapping(source = "ingredientDescription", target = "ingredientDescription")
+	@Mapping(source = "unit", target = "standardUnit")
 	@Mapping(source = "category", target = "category")
 	IngredientGetDTO convertEntityToIngredientGetDTO(Ingredient ingredient);
 

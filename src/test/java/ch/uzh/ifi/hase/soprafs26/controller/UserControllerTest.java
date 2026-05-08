@@ -26,8 +26,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -90,7 +89,7 @@ public class UserControllerTest {
 						&& "new bio".equals(user.getBio())
 						&& UserStatus.ONLINE == user.getStatus()))).willReturn(updatedUser);
 
-		MockHttpServletRequestBuilder postRequest = patch("/users/{userID}", "user-1")
+		MockHttpServletRequestBuilder postRequest = patch("/users/me")
 				.principal(new UsernamePasswordAuthenticationToken("user-1", null))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"email\":\"new@example.com\",\"username\":\"new-username\",\"password\":\"new-password\",\"bio\":\"new bio\",\"status\":\"ONLINE\"}");
@@ -121,7 +120,7 @@ public class UserControllerTest {
 
 		given(userService.getUserById("user-1")).willReturn(existingUser);
 
-		MockHttpServletRequestBuilder request = patch("/users/{userID}", "user-1")
+		MockHttpServletRequestBuilder request = patch("/users/me")
 				.principal(new UsernamePasswordAuthenticationToken("user-1", null))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{}");

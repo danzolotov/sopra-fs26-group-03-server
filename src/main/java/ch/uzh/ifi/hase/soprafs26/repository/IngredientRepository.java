@@ -13,4 +13,5 @@ public interface IngredientRepository extends JpaRepository<Ingredient, Long> {
 	List<Ingredient> findByIngredientNameIgnoreCase(String ingredientName);
 	Optional<Ingredient> findByIngredientNameIgnoreCaseAndUser(String ingredientName, User user);
 	List<Ingredient> findAllByUser(User user);
+	List<Ingredient> findAllByUserIsNull();
 }
