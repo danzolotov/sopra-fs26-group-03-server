@@ -30,6 +30,25 @@ public class GlobalExceptionAdvice extends ResponseEntityExceptionHandler {
 		String bodyOfResponse = "This should be application specific";
 		return handleExceptionInternal(ex, bodyOfResponse, new HttpHeaders(), HttpStatus.CONFLICT, request);
 	}
+    
+    @ExceptionHandler(ResponseStatusException.class)
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> handleResponseStatusException(ResponseStatusException ex) {
+        Map<String, String> response = new HashMap<>();
+        response.put("message", resolveResponseStatusExceptionMessage(ex));
+        return new ResponseEntity<>(response, ex.getStatusCode());
+    }
+
+    private String resolveResponseStatusExceptionMessage(ResponseStatusException ex) {
+        if (ex.getReason() != null && !ex.getReason().isBlank()) {
+            return ex.getReason();
+        }
+        if (ex.getMessage() != null && !ex.getMessage().isBlank()) {
+            return ex.getMessage();
+        }
+        return ex.getStatusCode().toString();
+    }
+
 
 	@ExceptionHandler(TransactionSystemException.class)
 	public ResponseStatusException handleTransactionSystemException(Exception ex, HttpServletRequest request) {
