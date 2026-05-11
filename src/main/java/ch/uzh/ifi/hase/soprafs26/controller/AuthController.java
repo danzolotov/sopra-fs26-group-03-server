@@ -39,12 +39,12 @@ public class AuthController {
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     @ResponseBody
-    public UserGetDTO registerUser(@RequestBody RegisterPostDTO registerPostDTO, HttpServletResponse response) {
+    public LoginGetDTO registerUser(@RequestBody RegisterPostDTO registerPostDTO, HttpServletResponse response) {
         validateRegisterInput(registerPostDTO);
         User userInput = DTOMapper.INSTANCE.convertRegisterPostDTOtoEntity(registerPostDTO);
         User createdUser = userService.createUser(userInput);
         addAuthCookie(response, createdUser.getToken());
-        return DTOMapper.INSTANCE.convertEntityToUserGetDTO(createdUser);
+        return DTOMapper.INSTANCE.convertEntityToLoginGetDTO(createdUser);
     }
 
     @PostMapping("/login")

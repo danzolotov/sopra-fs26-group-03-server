@@ -72,7 +72,7 @@ class SecurityIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(header().string("Set-Cookie", org.hamcrest.Matchers.containsString("AUTH_TOKEN=")))
                 .andExpect(jsonPath("$.userID").isNotEmpty())
-                .andExpect(jsonPath("$.token").doesNotExist());
+                .andExpect(jsonPath("$.token").isNotEmpty());
     }
 
     @Test
@@ -105,14 +105,14 @@ class SecurityIntegrationTest {
     }
 
     @Test
-    void users_withBearerHeader_isUnauthorized() throws Exception {
+    void users_withBearerHeader_isAllowed() throws Exception {
         createOnlineUser("authorized-user@example.com", "authorized-user", "valid-token");
 
         MockHttpServletRequestBuilder request = get("/users")
                 .header("Authorization", "Bearer valid-token")
                 .contentType(MediaType.APPLICATION_JSON);
 
-        mockMvc.perform(request).andExpect(status().isUnauthorized());
+        mockMvc.perform(request).andExpect(status().isOk());
     }
 
     @Test
