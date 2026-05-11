@@ -1,5 +1,6 @@
 package ch.uzh.ifi.hase.soprafs26.controller;
 
+import ch.uzh.ifi.hase.soprafs26.service.RecipeService;
 import ch.uzh.ifi.hase.soprafs26.service.UserService;
 
 import ch.uzh.ifi.hase.soprafs26.entity.Recipe;
@@ -30,6 +31,9 @@ public class RecipeControllerTest {
 
     @MockitoBean
     private RecipeRepository recipeRepository;
+
+    @MockitoBean
+    private RecipeService recipeService;
 
     @MockitoBean
     private UserService userService;
