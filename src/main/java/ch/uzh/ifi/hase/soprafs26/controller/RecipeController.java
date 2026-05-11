@@ -4,6 +4,8 @@ import ch.uzh.ifi.hase.soprafs26.entity.Recipe;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.RecipeGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 import ch.uzh.ifi.hase.soprafs26.repository.RecipeRepository;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.RecipePutDTO;
+import ch.uzh.ifi.hase.soprafs26.service.RecipeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -16,10 +18,12 @@ import java.util.List;
 public class RecipeController {
 
     private final RecipeRepository recipeRepository;
+    private final RecipeService recipeService;
 
     @Autowired
-    public RecipeController(RecipeRepository recipeRepository) {
+    public RecipeController(RecipeRepository recipeRepository, RecipeService recipeService) {
         this.recipeRepository = recipeRepository;
+        this.recipeService = recipeService;
     }
 
     @GetMapping("/recipes")
@@ -41,5 +45,11 @@ public class RecipeController {
         Recipe recipe = recipeRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe not found"));
         return DTOMapper.INSTANCE.convertEntityToRecipeGetDTO(recipe);
+    }
+
+    @PutMapping("/recipes/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updateRecipe(@PathVariable Long id, @RequestBody RecipePutDTO recipePutDTO) {
+        recipeService.updateRecipe(id, recipePutDTO);
     }
 }
