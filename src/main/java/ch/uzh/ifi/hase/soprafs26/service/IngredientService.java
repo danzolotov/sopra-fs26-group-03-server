@@ -89,8 +89,7 @@ this.ingredientRepository = ingredientRepository;
 
     // This seeds the database with about 50 common ingredients
 	public void seedIngredients() {
-		List<Ingredient> existing = ingredientRepository.findAllByUserIsNull();
-		if (!existing.isEmpty()) {
+		if (ingredientRepository.countByUserIsNull() > 0) {
 			return;
 		}
 

@@ -53,8 +53,7 @@ public class DatabaseSeeder implements CommandLineRunner {
 
     private void seedTestUser() {
         String testUsername = "testuser";
-        User existingUser = userRepository.findByUsername(testUsername);
-        if (existingUser == null) {
+        if (!userRepository.existsByUsername(testUsername)) {
             log.info("Seeding default test user: {}...", testUsername);
             User testUser = new User();
             testUser.setUsername(testUsername);
