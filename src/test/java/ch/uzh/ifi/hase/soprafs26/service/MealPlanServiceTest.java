@@ -32,6 +32,8 @@ public class MealPlanServiceTest {
     private GroupService groupService;
     @Mock
     private IngredientRepository ingredientRepository;
+    @Mock
+    private GroupMembershipRepository groupMembershipRepository;
 
     @InjectMocks
     private MealPlanService mealPlanService;
@@ -75,7 +77,9 @@ public class MealPlanServiceTest {
         
         when(mealPlanRepository.findByUserIDAndDateBetween("user-1", start, end))
                 .thenReturn(new ArrayList<>(Collections.singletonList(testPlan)));
-        when(groupService.getGroupOfUser("user-1")).thenReturn(testGroup);
+        GroupMembership membership = new GroupMembership();
+        membership.setGroup(testGroup);
+        when(groupMembershipRepository.findByUserUserID("user-1")).thenReturn(Optional.of(membership));
         
         MealPlan groupPlan = new MealPlan();
         groupPlan.setId(2L);
@@ -122,7 +126,9 @@ public class MealPlanServiceTest {
         testPlan.setUserID("user-2");
         testPlan.setGroupId(1L);
         when(mealPlanRepository.findById(1L)).thenReturn(Optional.of(testPlan));
-        when(groupService.getGroupOfUser("user-1")).thenReturn(testGroup);
+        GroupMembership membership = new GroupMembership();
+        membership.setGroup(testGroup);
+        when(groupMembershipRepository.findByUserUserID("user-1")).thenReturn(Optional.of(membership));
 
         mealPlanService.deleteMealPlan(1L, "user-1");
 
@@ -134,7 +140,9 @@ public class MealPlanServiceTest {
         testPlan.setUserID("user-2");
         testPlan.setGroupId(2L);
         when(mealPlanRepository.findById(1L)).thenReturn(Optional.of(testPlan));
-        when(groupService.getGroupOfUser("user-1")).thenReturn(testGroup);
+        GroupMembership membership = new GroupMembership();
+        membership.setGroup(testGroup);
+        when(groupMembershipRepository.findByUserUserID("user-1")).thenReturn(Optional.of(membership));
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, 
                 () -> mealPlanService.deleteMealPlan(1L, "user-1"));
@@ -146,7 +154,9 @@ public class MealPlanServiceTest {
         LocalDate now = LocalDate.now();
         when(mealPlanRepository.findByUserIDAndDateBetween(any(), any(), any()))
                 .thenReturn(new ArrayList<>(Collections.singletonList(testPlan)));
-        when(groupService.getGroupOfUser(any())).thenReturn(testGroup);
+        GroupMembership membership = new GroupMembership();
+        membership.setGroup(testGroup);
+        when(groupMembershipRepository.findByUserUserID(any())).thenReturn(Optional.of(membership));
         
         Pantry pantry = new Pantry();
         PantryItem item = new PantryItem();
@@ -168,6 +178,9 @@ public class MealPlanServiceTest {
     public void syncToShoppingList_success() {
         LocalDate now = LocalDate.now();
         when(groupService.getGroupOfUser("user-1")).thenReturn(testGroup);
+        GroupMembership membership = new GroupMembership();
+        membership.setGroup(testGroup);
+        when(groupMembershipRepository.findByUserUserID(any())).thenReturn(Optional.of(membership));
         
         ShoppingList list = new ShoppingList();
         list.setId(1L);
