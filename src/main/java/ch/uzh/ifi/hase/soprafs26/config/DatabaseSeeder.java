@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -23,6 +24,7 @@ import java.util.UUID;
  * It seeds default recipes and a standard test user if they don't already exist.
  */
 @Component
+@Profile("!prod")
 public class DatabaseSeeder implements CommandLineRunner {
 
     private final Logger log = LoggerFactory.getLogger(DatabaseSeeder.class);
@@ -51,8 +53,7 @@ public class DatabaseSeeder implements CommandLineRunner {
 
     private void seedTestUser() {
         String testUsername = "testuser";
-        User existingUser = userRepository.findByUsername(testUsername);
-        if (existingUser == null) {
+        if (!userRepository.existsByUsername(testUsername)) {
             log.info("Seeding default test user: {}...", testUsername);
             User testUser = new User();
             testUser.setUsername(testUsername);
@@ -63,9 +64,7 @@ public class DatabaseSeeder implements CommandLineRunner {
             userRepository.save(testUser);
             log.info("Test user '{}' seeded successfully with password 'Password123!'.", testUsername);
         } else {
-            log.info("Test user '{}' already exists. Forcing password update to 'Password123!'.", testUsername);
-            existingUser.setPasswordHash(passwordEncoder.encode("Password123!"));
-            userRepository.save(existingUser);
+            log.info("Test user '{}' already exists. Skipping user seeding.", testUsername);
         }
     }
 

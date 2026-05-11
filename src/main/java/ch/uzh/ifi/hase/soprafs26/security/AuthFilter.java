@@ -47,6 +47,13 @@ public class AuthFilter extends OncePerRequestFilter {
     }
 
     private String resolveToken(HttpServletRequest request) {
+        // 1. Try Authorization header (Bearer token)
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+
+        // 2. Fall back to cookie
         Cookie[] cookies = request.getCookies();
         if (cookies == null) {
             return null;

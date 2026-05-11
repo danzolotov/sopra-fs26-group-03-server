@@ -25,6 +25,7 @@ public class MealPlanService {
     private final ShoppingListService shoppingListService;
     private final GroupService groupService;
     private final IngredientRepository ingredientRepository;
+    private final GroupMembershipRepository groupMembershipRepository;
 
     @Autowired
     public MealPlanService(MealPlanRepository mealPlanRepository,
@@ -32,28 +33,29 @@ public class MealPlanService {
                            PantryService pantryService,
                            ShoppingListService shoppingListService,
                            GroupService groupService,
-                           IngredientRepository ingredientRepository) {
+                           IngredientRepository ingredientRepository,
+                           GroupMembershipRepository groupMembershipRepository) {
         this.mealPlanRepository = mealPlanRepository;
         this.recipeRepository = recipeRepository;
         this.pantryService = pantryService;
         this.shoppingListService = shoppingListService;
         this.groupService = groupService;
         this.ingredientRepository = ingredientRepository;
+        this.groupMembershipRepository = groupMembershipRepository;
     }
 
     public List<MealPlan> getMealPlans(String userID, LocalDate start, LocalDate end) {
         List<MealPlan> plans = new ArrayList<>(mealPlanRepository.findByUserIDAndDateBetween(userID, start, end));
         
-        try {
-            Group group = groupService.getGroupOfUser(userID);
+        groupMembershipRepository.findByUserUserID(userID).ifPresent(membership -> {
+            Group group = membership.getGroup();
             List<MealPlan> groupPlans = mealPlanRepository.findByGroupIdAndDateBetween(group.getId(), start, end);
             for (MealPlan gp : groupPlans) {
                 if (plans.stream().noneMatch(p -> p.getId().equals(gp.getId()))) {
                     plans.add(gp);
                 }
             }
-        } catch (ResponseStatusException e) {
-        }
+        });
         
         return plans;
     }
@@ -73,14 +75,14 @@ public class MealPlanService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Meal plan not found"));
         
         if (!plan.getUserID().equals(userID)) {
-             try {
-                 Group group = groupService.getGroupOfUser(userID);
+             groupMembershipRepository.findByUserUserID(userID).ifPresentOrElse(membership -> {
+                 Group group = membership.getGroup();
                  if (plan.getGroupId() == null || !plan.getGroupId().equals(group.getId())) {
                      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not authorized to delete this meal plan");
                  }
-             } catch (ResponseStatusException e) {
+             }, () -> {
                  throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not authorized to delete this meal plan");
-             }
+             });
         }
         
         mealPlanRepository.delete(plan);
@@ -102,15 +104,14 @@ public class MealPlanService {
         }
 
         Map<String, Integer> stockByName = new HashMap<>();
-        try {
-            Group group = groupService.getGroupOfUser(userID);
+        groupMembershipRepository.findByUserUserID(userID).ifPresent(membership -> {
+            Group group = membership.getGroup();
             Pantry pantry = pantryService.getPantryByGroupId(group.getId());
             for (PantryItem item : pantry.getItems()) {
                 String nameKey = item.getIngredient().getIngredientName().toLowerCase();
                 stockByName.put(nameKey, stockByName.getOrDefault(nameKey, 0) + item.getQuantity());
             }
-        } catch (ResponseStatusException e) {
-        }
+        });
 
         Map<Ingredient, Integer> missing = new HashMap<>();
         for (Map.Entry<String, Integer> entry : requiredByName.entrySet()) {

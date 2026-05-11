@@ -41,7 +41,6 @@ public class UserService {
 		newUser.setStatus(UserStatus.OFFLINE);
 		newUser.setPasswordHash(passwordEncoder.encode(newUser.getPasswordHash()));
 		newUser = userRepository.save(newUser);
-		userRepository.flush();
 
 		log.debug("Created Information for User: {}", newUser);
 		return newUser;
@@ -56,7 +55,6 @@ public class UserService {
 		user.setToken(UUID.randomUUID().toString());
 		user.setStatus(UserStatus.ONLINE);
 		user = userRepository.save(user);
-		userRepository.flush();
 		return user;
 	}
 
@@ -127,7 +125,6 @@ public class UserService {
 		}
 
 		user = userRepository.save(user);
-		userRepository.flush();
 		return user;
 	}
 
@@ -140,23 +137,22 @@ public class UserService {
 		user.setStatus(UserStatus.OFFLINE);
 		user.setToken(UUID.randomUUID().toString());
 		userRepository.save(user);
-		userRepository.flush();
 	}
 
 	private void checkIfUserExists(User userToBeCreated) {
-		User userByUsername = userRepository.findByUsername(userToBeCreated.getUsername());
-		User userByEmail = userRepository.findByEmail(userToBeCreated.getEmail());
-
-		if (userByUsername != null && userByEmail != null) {
-			throw new ResponseStatusException(HttpStatus.CONFLICT,
-					String.format("Both username '%s' and email '%s' are already in use.",
-							userToBeCreated.getUsername(), userToBeCreated.getEmail()));
-		} else if (userByUsername != null) {
-			throw new ResponseStatusException(HttpStatus.CONFLICT,
-					String.format("Username '%s' is already in use.", userToBeCreated.getUsername()));
-		} else if (userByEmail != null) {
-			throw new ResponseStatusException(HttpStatus.CONFLICT,
-					String.format("Email '%s' is already in use.", userToBeCreated.getEmail()));
+		User existingUser = userRepository.findByUsernameOrEmail(userToBeCreated.getUsername(), userToBeCreated.getEmail());
+		if (existingUser != null) {
+			if (existingUser.getUsername().equals(userToBeCreated.getUsername()) && existingUser.getEmail().equals(userToBeCreated.getEmail())) {
+				throw new ResponseStatusException(HttpStatus.CONFLICT,
+						String.format("Both username '%s' and email '%s' are already in use.",
+								userToBeCreated.getUsername(), userToBeCreated.getEmail()));
+			} else if (existingUser.getUsername().equals(userToBeCreated.getUsername())) {
+				throw new ResponseStatusException(HttpStatus.CONFLICT,
+						String.format("Username '%s' is already in use.", userToBeCreated.getUsername()));
+			} else {
+				throw new ResponseStatusException(HttpStatus.CONFLICT,
+						String.format("Email '%s' is already in use.", userToBeCreated.getEmail()));
+			}
 		}
 	}
 }

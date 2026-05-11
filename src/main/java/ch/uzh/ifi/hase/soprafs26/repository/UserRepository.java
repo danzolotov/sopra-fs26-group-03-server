@@ -7,11 +7,12 @@ import ch.uzh.ifi.hase.soprafs26.entity.User;
 
 @Repository("userRepository")
 public interface UserRepository extends JpaRepository<User, String> {
-	User findByEmail(String email);
-
 	User findByUserID(String userID);
-
-	User findByUsername(String username);
-
 	User findByToken(String token);
+	User findByUsername(String username);
+	User findByEmail(String email);
+	User findByUsernameOrEmail(String username, String email);
+
+	boolean existsByUsername(String username);
+	boolean existsByEmail(String email);
 }

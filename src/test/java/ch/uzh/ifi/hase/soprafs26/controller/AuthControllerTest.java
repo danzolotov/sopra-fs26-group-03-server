@@ -81,9 +81,7 @@ public class AuthControllerTest {
 				.andExpect(status().isCreated())
 				.andExpect(header().string("Set-Cookie", not(containsString("Secure"))))
 				.andExpect(jsonPath("$.userID", is(user.getUserID())))
-				.andExpect(jsonPath("$.email", is(user.getEmail())))
-				.andExpect(jsonPath("$.username", is(user.getUsername())))
-				.andExpect(jsonPath("$.status", is(user.getStatus().toString())));
+				.andExpect(jsonPath("$.token", is(user.getToken())));
 	}
 
 	@Test

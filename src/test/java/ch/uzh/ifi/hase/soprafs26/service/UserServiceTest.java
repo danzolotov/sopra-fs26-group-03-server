@@ -60,18 +60,20 @@ import static org.junit.jupiter.api.Assertions.*;
 
 	@Test
 	 void createUser_duplicateEmail_throwsException() {
-		userService.createUser(testUser);
-		Mockito.when(userRepository.findByEmail(Mockito.any())).thenReturn(testUser);
-		Mockito.when(userRepository.findByUsername(Mockito.any())).thenReturn(null);
+		Mockito.when(userRepository.findByUsernameOrEmail(Mockito.anyString(), Mockito.anyString()))
+				.thenReturn(testUser);
+		// Simulate that only email matches in the testUser object returned by the DB
+		testUser.setUsername("differentUsername"); 
 
 		assertThrows(ResponseStatusException.class, () -> userService.createUser(testUser));
 	}
 
 	@Test
 	void createUser_duplicateUsername_throwsException() {
-		userService.createUser(testUser);
-		Mockito.when(userRepository.findByEmail(Mockito.any())).thenReturn(null);
-		Mockito.when(userRepository.findByUsername(Mockito.any())).thenReturn(testUser);
+		Mockito.when(userRepository.findByUsernameOrEmail(Mockito.anyString(), Mockito.anyString()))
+				.thenReturn(testUser);
+		// Simulate that only username matches
+		testUser.setEmail("different@example.com");
 
 		assertThrows(ResponseStatusException.class, () -> userService.createUser(testUser));
 	}
@@ -79,9 +81,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 	@Test
 	 void createUser_duplicateInputs_throwsException() {
-		userService.createUser(testUser);
-		Mockito.when(userRepository.findByEmail(Mockito.any())).thenReturn(testUser);
-		Mockito.when(userRepository.findByUsername(Mockito.any())).thenReturn(testUser);
+		Mockito.when(userRepository.findByUsernameOrEmail(Mockito.anyString(), Mockito.anyString()))
+				.thenReturn(testUser);
 
 		assertThrows(ResponseStatusException.class, () -> userService.createUser(testUser));
 	}
