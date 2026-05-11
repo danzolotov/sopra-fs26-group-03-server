@@ -123,14 +123,18 @@ public class AuthControllerTest {
 	@Test
 	public void createUser_duplicateUsername_returnsConflict() throws Exception {
 		RegisterPostDTO registerPostDTO = createRegisterDTO();
+		String errorMessage = "Username already exists";
 
-		given(userService.createUser(Mockito.any())).willThrow(new ResponseStatusException(HttpStatus.CONFLICT, "Username already exists"));
+		given(userService.createUser(Mockito.any()))
+				.willThrow(new ResponseStatusException(HttpStatus.CONFLICT, errorMessage));
 
 		MockHttpServletRequestBuilder postRequest = post("/auth/register")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(asJsonString(registerPostDTO));
 
-		mockMvc.perform(postRequest).andExpect(status().isConflict());
+		mockMvc.perform(postRequest)
+				.andExpect(status().isConflict())
+				.andExpect(jsonPath("$.message", is(errorMessage)));
 	}
 
 
