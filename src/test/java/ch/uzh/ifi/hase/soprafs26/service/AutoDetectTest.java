@@ -9,7 +9,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class AutoDetectTest {
+class ShoppingListAutoDetectServiceTest {
 
 	private ShoppingListAutoDetectService autoDetectService;
 	private Method extractMethod;
