@@ -12,6 +12,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -55,6 +56,18 @@ class IngredientServiceTest {
 	}
 
 	@Test
+	void createIngredient_trimsNameBeforeDuplicateCheckAndSave() {
+		testIngredient.setIngredientName("  Milk  ");
+		when(ingredientRepository.findByIngredientNameIgnoreCaseAndUser("Milk", testUser)).thenReturn(Optional.empty());
+		when(ingredientRepository.saveAndFlush(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+		Ingredient created = ingredientService.createIngredient(testIngredient);
+
+		assertEquals("Milk", created.getIngredientName());
+		verify(ingredientRepository).findByIngredientNameIgnoreCaseAndUser("Milk", testUser);
+	}
+
+	@Test
     void createIngredient_duplicateName_throwsConflict() {
 		when(ingredientRepository.findByIngredientNameIgnoreCaseAndUser("Milk", testUser))
 				.thenReturn(Optional.of(testIngredient));
@@ -89,5 +102,93 @@ class IngredientServiceTest {
 		ResponseStatusException ex = assertThrows(ResponseStatusException.class,
 				() -> ingredientService.createIngredient(testIngredient));
 		assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatusCode());
+	}
+
+	@Test
+	void getIngredients_nullUser_throwsUnauthorized() {
+		ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+				() -> ingredientService.getIngredients(null));
+
+		assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatusCode());
+	}
+
+	@Test
+	void getIngredients_userIngredientOverridesGlobalIngredientWithSameName() {
+		Ingredient userMilk = ingredient("Milk", 1L, testUser, Unit.LITER);
+		Ingredient globalMilk = ingredient("milk", 2L, null, Unit.MILLILITER);
+		Ingredient globalEgg = ingredient("Egg", 3L, null, Unit.PIECE);
+		when(ingredientRepository.findAllByUser(testUser)).thenReturn(List.of(userMilk));
+		when(ingredientRepository.findAllByUserIsNull()).thenReturn(List.of(globalMilk, globalEgg));
+
+		List<Ingredient> result = ingredientService.getIngredients(testUser);
+
+		assertEquals(List.of(userMilk, globalEgg), result);
+	}
+
+	@Test
+	void autocompleteIngredients_matchesSeedAliasAndStripsQuantity() {
+		List<IngredientService.IngredientAutocompleteResult> results =
+				ingredientService.autocompleteIngredients(List.of("capsicum", "- 2 kg tomatoes"));
+
+		assertEquals("Bell Pepper", results.get(0).ingredientName());
+		assertTrue(results.get(0).matched());
+		assertEquals("Tomato", results.get(1).ingredientName());
+		assertTrue(results.get(1).matched());
+	}
+
+	@Test
+	void autocompleteIngredients_unrelatedInputReturnsUnmatchedResult() {
+		List<IngredientService.IngredientAutocompleteResult> results =
+				ingredientService.autocompleteIngredients(List.of("dish soap"));
+
+		assertEquals("dish soap", results.get(0).input());
+		assertFalse(results.get(0).matched());
+		assertNull(results.get(0).ingredientName());
+	}
+
+	@Test
+	void resolveOrCreateDetectedIngredient_existingGlobalMatchById_returnsGlobalIngredient() {
+		Ingredient globalMilk = ingredient("Milk", 42L, null, Unit.MILLILITER);
+		when(ingredientRepository.findAll()).thenReturn(List.of(globalMilk));
+		when(ingredientRepository.findById(42L)).thenReturn(Optional.of(globalMilk));
+
+		Ingredient resolved = ingredientService.resolveOrCreateDetectedIngredient("milk", testUser);
+
+		assertEquals(globalMilk, resolved);
+		verify(ingredientRepository, never()).saveAndFlush(any(Ingredient.class));
+	}
+
+	@Test
+	void resolveOrCreateDetectedIngredient_unknownInputCreatesCleanUserIngredient() {
+		when(ingredientRepository.findByIngredientNameIgnoreCaseAndUser("Dragon Fruit", testUser)).thenReturn(Optional.empty());
+		when(ingredientRepository.findByIngredientNameIgnoreCase("Dragon Fruit")).thenReturn(List.of());
+		when(ingredientRepository.saveAndFlush(any(Ingredient.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+		Ingredient resolved = ingredientService.resolveOrCreateDetectedIngredient("[ ] 2 packs dragon fruit!", testUser);
+
+		assertEquals("Dragon Fruit", resolved.getIngredientName());
+		assertEquals(Unit.PIECE, resolved.getUnit());
+		assertEquals(testUser, resolved.getUser());
+		verify(ingredientRepository).saveAndFlush(resolved);
+	}
+
+	@Test
+	void resolveOrCreateDetectedIngredients_deduplicatesResolvedIngredientsByName() {
+		Ingredient globalMilk = ingredient("Milk", 42L, null, Unit.MILLILITER);
+		when(ingredientRepository.findAll()).thenReturn(List.of(globalMilk));
+		when(ingredientRepository.findById(42L)).thenReturn(Optional.of(globalMilk));
+
+		List<Ingredient> resolved = ingredientService.resolveOrCreateDetectedIngredients(List.of("milk", "Milk"), testUser);
+
+		assertEquals(List.of(globalMilk), resolved);
+	}
+
+	private Ingredient ingredient(String name, Long id, User user, Unit unit) {
+		Ingredient ingredient = new Ingredient();
+		ingredient.setId(id);
+		ingredient.setIngredientName(name);
+		ingredient.setUnit(unit);
+		ingredient.setUser(user);
+		return ingredient;
 	}
 }
