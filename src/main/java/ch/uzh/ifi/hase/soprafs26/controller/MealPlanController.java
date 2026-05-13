@@ -1,14 +1,19 @@
 package ch.uzh.ifi.hase.soprafs26.controller;
 
+import ch.uzh.ifi.hase.soprafs26.entity.Group;
 import ch.uzh.ifi.hase.soprafs26.entity.Ingredient;
 import ch.uzh.ifi.hase.soprafs26.entity.MealPlan;
 import ch.uzh.ifi.hase.soprafs26.entity.Recipe;
+import ch.uzh.ifi.hase.soprafs26.entity.ShoppingList;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.*;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
+import ch.uzh.ifi.hase.soprafs26.service.GroupService;
 import ch.uzh.ifi.hase.soprafs26.service.MealPlanService;
+import ch.uzh.ifi.hase.soprafs26.service.ShoppingListService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,10 +26,32 @@ import java.util.Map;
 public class MealPlanController {
 
     private final MealPlanService mealPlanService;
+    private final GroupService groupService;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final ShoppingListService shoppingListService;
 
     @Autowired
-    public MealPlanController(MealPlanService mealPlanService) {
+    public MealPlanController(MealPlanService mealPlanService, GroupService groupService,
+                              SimpMessagingTemplate messagingTemplate, ShoppingListService shoppingListService) {
         this.mealPlanService = mealPlanService;
+        this.groupService = groupService;
+        this.messagingTemplate = messagingTemplate;
+        this.shoppingListService = shoppingListService;
+    }
+
+    private void broadcastUpdate(String username) {
+        try {
+            Group group = groupService.getGroupOfUser(username);
+            messagingTemplate.convertAndSend("/topic/meal-plans/" + group.getId(), "REFRESH");
+        } catch (Exception e) {
+            // User might not be in a group, ignore
+        }
+    }
+
+    private void broadcastShoppingListUpdate(Long groupId) {
+        ShoppingList list = shoppingListService.getShoppingListByGroupId(groupId);
+        ShoppingListGetDTO dto = DTOMapper.INSTANCE.convertEntityToShoppingListGetDTO(list);
+        messagingTemplate.convertAndSend("/topic/shopping-list/" + groupId, dto);
     }
 
     @GetMapping("/meal-plans")
@@ -54,6 +81,7 @@ public class MealPlanController {
         plan.setRecipe(recipe);
         
         MealPlan saved = mealPlanService.createMealPlan(plan);
+        broadcastUpdate(auth.getName());
         return DTOMapper.INSTANCE.convertEntityToMealPlanGetDTO(saved);
     }
 
@@ -61,6 +89,7 @@ public class MealPlanController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteMealPlan(Authentication auth, @PathVariable Long id) {
         mealPlanService.deleteMealPlan(id, auth.getName());
+        broadcastUpdate(auth.getName());
     }
 
     @GetMapping("/meal-plans/missing-ingredients")
@@ -88,5 +117,8 @@ public class MealPlanController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         mealPlanService.syncToShoppingList(auth.getName(), startDate, endDate);
+        broadcastUpdate(auth.getName());
+        Group group = groupService.getGroupOfUser(auth.getName());
+        broadcastShoppingListUpdate(group.getId());
     }
 }

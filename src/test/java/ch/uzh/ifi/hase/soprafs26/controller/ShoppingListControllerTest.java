@@ -42,9 +42,16 @@ public class ShoppingListControllerTest {
 	private ch.uzh.ifi.hase.soprafs26.service.IngredientService ingredientService;
 
 	@MockitoBean
+	private ch.uzh.ifi.hase.soprafs26.service.PantryService pantryService;
+
+	@MockitoBean
 	private ch.uzh.ifi.hase.soprafs26.service.UserService userService;
 
+	@MockitoBean
+	private org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
+
 	private Group testGroup;
+	private Pantry testPantry;
 	private ShoppingList testList;
 	private ShoppingListItem testItem;
 	private Ingredient testIngredient;
@@ -53,6 +60,10 @@ public class ShoppingListControllerTest {
 	public void setup() {
 		testGroup = new Group();
 		testGroup.setId(1L);
+
+		testPantry = new Pantry();
+		testPantry.setId(20L);
+		testPantry.setGroupId(1L);
 
 		testList = new ShoppingList();
 		testList.setId(10L);
@@ -108,6 +119,8 @@ public class ShoppingListControllerTest {
 		testItem.setIsBought(true);
 
 		given(groupService.getGroupOfUser("user-1")).willReturn(testGroup);
+		given(shoppingListService.getShoppingListByGroupId(1L)).willReturn(testList);
+		given(pantryService.getPantryByGroupId(1L)).willReturn(testPantry);
 		given(shoppingListService.patchItemBoughtStatus(500L, true)).willReturn(testItem);
 
 		mockMvc.perform(patch("/groups/me/shopping-list/items/{itemId}", 500L)

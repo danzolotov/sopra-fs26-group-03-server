@@ -38,7 +38,24 @@ public class MealPlanControllerTest {
     private MealPlanService mealPlanService;
 
     @MockitoBean
+    private ch.uzh.ifi.hase.soprafs26.service.GroupService groupService;
+
+    @MockitoBean
+    private ch.uzh.ifi.hase.soprafs26.service.ShoppingListService shoppingListService;
+
+    @MockitoBean
+    private org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
+
+    @MockitoBean
     private UserService userService;
+
+    private ch.uzh.ifi.hase.soprafs26.entity.Group testGroup;
+
+    @org.junit.jupiter.api.BeforeEach
+    public void setup() {
+        testGroup = new ch.uzh.ifi.hase.soprafs26.entity.Group();
+        testGroup.setId(1L);
+    }
 
     @Test
     public void getMealPlans_success() throws Exception {
@@ -76,6 +93,7 @@ public class MealPlanControllerTest {
         saved.setRecipe(recipe);
 
         given(mealPlanService.createMealPlan(any())).willReturn(saved);
+        given(groupService.getGroupOfUser("user-1")).willReturn(testGroup);
 
         mockMvc.perform(post("/meal-plans")
                 .principal(new UsernamePasswordAuthenticationToken("user-1", null))
@@ -87,6 +105,7 @@ public class MealPlanControllerTest {
 
     @Test
     public void deleteMealPlan_success() throws Exception {
+        given(groupService.getGroupOfUser("user-1")).willReturn(testGroup);
         mockMvc.perform(delete("/meal-plans/1")
                 .principal(new UsernamePasswordAuthenticationToken("user-1", null)))
                 .andExpect(status().isNoContent());
@@ -113,6 +132,11 @@ public class MealPlanControllerTest {
 
     @Test
     public void syncToShoppingList_success() throws Exception {
+        given(groupService.getGroupOfUser("user-1")).willReturn(testGroup);
+        ch.uzh.ifi.hase.soprafs26.entity.ShoppingList list = new ch.uzh.ifi.hase.soprafs26.entity.ShoppingList();
+        list.setId(10L);
+        given(shoppingListService.getShoppingListByGroupId(1L)).willReturn(list);
+
         mockMvc.perform(post("/meal-plans/sync-shopping-list")
                 .principal(new UsernamePasswordAuthenticationToken("user-1", null))
                 .param("startDate", "2024-01-01")
