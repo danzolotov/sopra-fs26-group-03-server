@@ -12,3 +12,7 @@ env_variables:
   SPRING_DATASOURCE_PASSWORD: "eZ%Hcv9e+*?kbS_"
   # Ensures cross-origin cookies work between Vercel and Google Cloud:
   APP_AUTH_COOKIE_SECURE: "true"
+
+#to address the cold start issue
+automatic_scaling:
+  min_instances: 1

@@ -47,6 +47,9 @@ public class PantryControllerTest {
 	@MockitoBean
 	private UserService userService;
 
+	@MockitoBean
+	private org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
+
 	private Group testGroup;
 	private Pantry testPantry;
 	private PantryItem testItem;
@@ -111,6 +114,7 @@ public class PantryControllerTest {
 		dto.setQuantity(10);
 
 		given(groupService.getGroupOfUser("user-1")).willReturn(testGroup);
+		given(pantryService.getPantryByGroupId(1L)).willReturn(testPantry);
 		doNothing().when(pantryService).updateItem(eq(500L), eq(100L), eq(10));
 
 		mockMvc.perform(put("/groups/me/pantry/items/{itemId}", 500L)
@@ -125,6 +129,7 @@ public class PantryControllerTest {
 	@Test
 	public void deleteItem_success() throws Exception {
 		given(groupService.getGroupOfUser("user-1")).willReturn(testGroup);
+		given(pantryService.getPantryByGroupId(1L)).willReturn(testPantry);
 		doNothing().when(pantryService).deleteItem(500L);
 
 		mockMvc.perform(delete("/groups/me/pantry/items/{itemId}", 500L)

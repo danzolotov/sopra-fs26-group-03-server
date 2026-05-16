@@ -58,19 +58,30 @@ return ingredientService.autocompleteIngredients(foundIngredients).stream()
 }
 
     private User resolveUserFromRequest(HttpServletRequest request) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if (AUTH_COOKIE_NAME.equals(cookie.getName())) {
-                    String token = cookie.getValue();
-                    User user = userService.getUserByToken(token);
-                    if (user == null) {
-                        throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED, "Invalid authentication token");
+        String token = null;
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+        } else {
+            Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    if (AUTH_COOKIE_NAME.equals(cookie.getName())) {
+                        token = cookie.getValue();
+                        break;
                     }
-                    return user;
                 }
             }
         }
+        
+        if (token != null) {
+            User user = userService.getUserByToken(token);
+            if (user == null) {
+                throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED, "Invalid authentication token");
+            }
+            return user;
+        }
+        
         throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED, "Missing authentication token");
     }
 

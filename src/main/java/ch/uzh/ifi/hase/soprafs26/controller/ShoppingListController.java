@@ -5,12 +5,14 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.*;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 import ch.uzh.ifi.hase.soprafs26.service.GroupService;
 import ch.uzh.ifi.hase.soprafs26.service.IngredientService;
+import ch.uzh.ifi.hase.soprafs26.service.PantryService;
 import ch.uzh.ifi.hase.soprafs26.service.ShoppingListAutoDetectService;
 import ch.uzh.ifi.hase.soprafs26.service.ShoppingListService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -28,17 +30,34 @@ public class ShoppingListController {
 	private final GroupService groupService;
 	private final ShoppingListAutoDetectService shoppingListAutoDetectService;
 	private final IngredientService ingredientService;
+	private final PantryService pantryService;
 	private final ch.uzh.ifi.hase.soprafs26.service.UserService userService;
+	private final SimpMessagingTemplate messagingTemplate;
 
 	@Autowired
 	public ShoppingListController(ShoppingListService shoppingListService, GroupService groupService,
 			ShoppingListAutoDetectService shoppingListAutoDetectService, IngredientService ingredientService,
-			ch.uzh.ifi.hase.soprafs26.service.UserService userService) {
+			ch.uzh.ifi.hase.soprafs26.service.UserService userService, SimpMessagingTemplate messagingTemplate,
+			PantryService pantryService) {
 		this.shoppingListService = shoppingListService;
 		this.groupService = groupService;
 		this.shoppingListAutoDetectService = shoppingListAutoDetectService;
 		this.ingredientService = ingredientService;
 		this.userService = userService;
+		this.messagingTemplate = messagingTemplate;
+		this.pantryService = pantryService;
+	}
+
+	private void broadcastUpdate(Long groupId) {
+		ShoppingList list = shoppingListService.getShoppingListByGroupId(groupId);
+		ShoppingListGetDTO dto = DTOMapper.INSTANCE.convertEntityToShoppingListGetDTO(list);
+		messagingTemplate.convertAndSend("/topic/shopping-list/" + groupId, dto);
+	}
+
+	private void broadcastPantryUpdate(Long groupId) {
+		Pantry pantry = pantryService.getPantryByGroupId(groupId);
+		PantryGetDTO dto = DTOMapper.INSTANCE.convertEntityToPantryGetDTO(pantry);
+		messagingTemplate.convertAndSend("/topic/pantry/" + groupId, dto);
 	}
 
 	@PostMapping(value = "/shoppings-list/auto-detect", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -100,6 +119,7 @@ public class ShoppingListController {
 		ShoppingList list = shoppingListService.getShoppingListByGroupId(group.getId());
 		ShoppingListItem item = shoppingListService.addItemToList(list.getId(), dto.getIngredientId(), dto.getIngredientName(),
 				dto.getIngredientDescription(), dto.getStandardUnit(), dto.getCategory(), dto.getQuantity());
+		broadcastUpdate(group.getId());
 		return DTOMapper.INSTANCE.convertEntityToShoppingListItemGetDTO(item);
 	}
 
@@ -118,6 +138,7 @@ public class ShoppingListController {
 		Group group = groupService.getGroupOfUser(auth.getName());
 		shoppingListService.getItemByIdAndVerifyGroup(itemId, group.getId());
 		shoppingListService.updateItem(itemId, dto.getIngredientId(), dto.getQuantity());
+		broadcastUpdate(group.getId());
 	}
 
 	@PatchMapping("/groups/me/shopping-list/items/{itemId}")
@@ -127,6 +148,10 @@ public class ShoppingListController {
 		Group group = groupService.getGroupOfUser(auth.getName());
 		shoppingListService.getItemByIdAndVerifyGroup(itemId, group.getId());
 		ShoppingListItem item = shoppingListService.patchItemBoughtStatus(itemId, dto.getIsBought());
+		broadcastUpdate(group.getId());
+		if (Boolean.TRUE.equals(dto.getIsBought())) {
+			broadcastPantryUpdate(group.getId());
+		}
 		return DTOMapper.INSTANCE.convertEntityToShoppingListItemGetDTO(item);
 	}
 
@@ -136,5 +161,6 @@ public class ShoppingListController {
 		Group group = groupService.getGroupOfUser(auth.getName());
 		shoppingListService.getItemByIdAndVerifyGroup(itemId, group.getId());
 		shoppingListService.deleteItem(itemId);
+		broadcastUpdate(group.getId());
 	}
 }
