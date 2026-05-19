@@ -5,6 +5,7 @@ import ch.uzh.ifi.hase.soprafs26.entity.Ingredient;
 import ch.uzh.ifi.hase.soprafs26.entity.Recipe;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.service.IngredientService;
+import ch.uzh.ifi.hase.soprafs26.repository.IngredientRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.RecipeRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 import ch.uzh.ifi.hase.soprafs26.constant.Unit;
@@ -31,14 +32,16 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final RecipeRepository recipeRepository;
     private final UserRepository userRepository;
     private final IngredientService ingredientService;
+    private final IngredientRepository ingredientRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
     public DatabaseSeeder(RecipeRepository recipeRepository, UserRepository userRepository,
-                          IngredientService ingredientService, PasswordEncoder passwordEncoder) {
+                          IngredientService ingredientService, IngredientRepository ingredientRepository, PasswordEncoder passwordEncoder) {
         this.recipeRepository = recipeRepository;
         this.userRepository = userRepository;
         this.ingredientService = ingredientService;
+        this.ingredientRepository = ingredientRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -73,9 +76,11 @@ public class DatabaseSeeder implements CommandLineRunner {
         long count = recipeRepository.count();
         if (count == 0) {
             log.info("Seeding 10 default recipes...");
-            
+
             // 1. Pasta Carbonara
             Recipe carbonara = createRecipe("Pasta Carbonara", "Classic Italian pasta dish with eggs, cheese, and pancetta.");
+            // persist recipe first so we can attach existing ingredients to it
+            recipeRepository.save(carbonara);
             createAndAddIngredient(carbonara, "Spaghetti", Unit.GRAM, 200, IngredientCategory.GRAIN);
             createAndAddIngredient(carbonara, "Eggs", Unit.PIECE, 2, IngredientCategory.EGGS);
             createAndAddIngredient(carbonara, "Pecorino Romano", Unit.GRAM, 50, IngredientCategory.DAIRY);
@@ -84,6 +89,7 @@ public class DatabaseSeeder implements CommandLineRunner {
 
             // 2. Vegetable Stir Fry
             Recipe stirFry = createRecipe("Vegetable Stir Fry", "Quick and healthy stir-fry with seasonal vegetables.");
+            recipeRepository.save(stirFry);
             createAndAddIngredient(stirFry, "Basmati Rice", Unit.GRAM, 150, IngredientCategory.GRAIN);
             createAndAddIngredient(stirFry, "Broccoli", Unit.GRAM, 200, IngredientCategory.VEGETABLE);
             createAndAddIngredient(stirFry, "Carrots", Unit.PIECE, 2, IngredientCategory.VEGETABLE);
@@ -92,6 +98,7 @@ public class DatabaseSeeder implements CommandLineRunner {
 
             // 3. Chicken Caesar Salad
             Recipe caesar = createRecipe("Chicken Caesar Salad", "Crispy romaine lettuce, grilled chicken, and Caesar dressing.");
+            recipeRepository.save(caesar);
             createAndAddIngredient(caesar, "Chicken Breast", Unit.GRAM, 200, IngredientCategory.MEAT);
             createAndAddIngredient(caesar, "Romaine Lettuce", Unit.PIECE, 1, IngredientCategory.VEGETABLE);
             createAndAddIngredient(caesar, "Croutons", Unit.GRAM, 50, IngredientCategory.BAKERY);
@@ -100,6 +107,7 @@ public class DatabaseSeeder implements CommandLineRunner {
 
             // 4. Beef Tacos
             Recipe tacos = createRecipe("Beef Tacos", "Mexican-style tacos with seasoned ground beef and fresh toppings.");
+            recipeRepository.save(tacos);
             createAndAddIngredient(tacos, "Ground Beef", Unit.GRAM, 250, IngredientCategory.MEAT);
             createAndAddIngredient(tacos, "Taco Shells", Unit.PIECE, 3, IngredientCategory.BAKERY);
             createAndAddIngredient(tacos, "Shredded Cheese", Unit.GRAM, 50, IngredientCategory.DAIRY);
@@ -108,6 +116,7 @@ public class DatabaseSeeder implements CommandLineRunner {
 
             // 5. Mushroom Risotto
             Recipe risotto = createRecipe("Mushroom Risotto", "Creamy Italian rice dish with mushrooms and parmesan.");
+            recipeRepository.save(risotto);
             createAndAddIngredient(risotto, "Arborio Rice", Unit.GRAM, 150, IngredientCategory.GRAIN);
             createAndAddIngredient(risotto, "Mushrooms", Unit.GRAM, 150, IngredientCategory.VEGETABLE);
             createAndAddIngredient(risotto, "Vegetable Broth", Unit.MILLILITER, 500, IngredientCategory.OTHER);
@@ -116,6 +125,7 @@ public class DatabaseSeeder implements CommandLineRunner {
 
             // 6. Greek Salad
             Recipe greek = createRecipe("Greek Salad", "Refreshingly crisp salad with cucumbers, tomatoes, and feta cheese.");
+            recipeRepository.save(greek);
             createAndAddIngredient(greek, "Cucumber", Unit.PIECE, 1, IngredientCategory.VEGETABLE);
             createAndAddIngredient(greek, "Tomatoes", Unit.PIECE, 2, IngredientCategory.VEGETABLE);
             createAndAddIngredient(greek, "Feta Cheese", Unit.GRAM, 100, IngredientCategory.DAIRY);
@@ -124,6 +134,7 @@ public class DatabaseSeeder implements CommandLineRunner {
 
             // 7. Tomato Soup
             Recipe soup = createRecipe("Tomato Soup", "Comforting homemade tomato soup with basil.");
+            recipeRepository.save(soup);
             createAndAddIngredient(soup, "Canned Tomatoes", Unit.GRAM, 400, IngredientCategory.VEGETABLE);
             createAndAddIngredient(soup, "Onion", Unit.PIECE, 1, IngredientCategory.VEGETABLE);
             createAndAddIngredient(soup, "Garlic", Unit.PIECE, 2, IngredientCategory.VEGETABLE);
@@ -132,6 +143,7 @@ public class DatabaseSeeder implements CommandLineRunner {
 
             // 8. Pancakes
             Recipe pancakes = createRecipe("Pancakes", "Fluffy breakfast pancakes served with maple syrup.");
+            recipeRepository.save(pancakes);
             createAndAddIngredient(pancakes, "Flour", Unit.GRAM, 200, IngredientCategory.BAKING);
             createAndAddIngredient(pancakes, "Milk", Unit.MILLILITER, 250, IngredientCategory.DAIRY);
             createAndAddIngredient(pancakes, "Eggs", Unit.PIECE, 1, IngredientCategory.EGGS);
@@ -140,6 +152,7 @@ public class DatabaseSeeder implements CommandLineRunner {
 
             // 9. Guacamole
             Recipe guacamole = createRecipe("Guacamole", "Fresh avocado dip with lime and cilantro.");
+            recipeRepository.save(guacamole);
             createAndAddIngredient(guacamole, "Avocados", Unit.PIECE, 2, IngredientCategory.VEGETABLE);
             createAndAddIngredient(guacamole, "Limes", Unit.PIECE, 1, IngredientCategory.FRUIT);
             createAndAddIngredient(guacamole, "Onion", Unit.PIECE, 1, IngredientCategory.VEGETABLE);
@@ -148,6 +161,7 @@ public class DatabaseSeeder implements CommandLineRunner {
 
             // 10. Club Sandwich
             Recipe club = createRecipe("Club Sandwich", "Triple-decker sandwich with turkey, bacon, and lettuce.");
+            recipeRepository.save(club);
             createAndAddIngredient(club, "Bread Slices", Unit.PIECE, 3, IngredientCategory.BAKERY);
             createAndAddIngredient(club, "Turkey Breast", Unit.GRAM, 50, IngredientCategory.MEAT);
             createAndAddIngredient(club, "Bacon", Unit.GRAM, 30, IngredientCategory.MEAT);
@@ -168,12 +182,29 @@ public class DatabaseSeeder implements CommandLineRunner {
     }
 
     private void createAndAddIngredient(Recipe recipe, String name, Unit unit, Integer quantity, IngredientCategory category) {
-        Ingredient ing = new Ingredient();
-        ing.setIngredientName(name);
-        ing.setUnit(unit);
-        ing.setQuantity(quantity);
-        ing.setCategory(category);
-        ing.setRecipe(recipe);
-        recipe.getIngredients().add(ing);
+        // Try to find an existing global (non-user) ingredient with the same name (case-insensitive)
+        Ingredient existing = ingredientRepository.findByIngredientNameIgnoreCase(name).stream()
+                .filter(i -> i.getUser() == null && i.getRecipe() == null)
+                .findFirst()
+                .orElse(null);
+
+        if (existing != null) {
+            // Reuse the existing global ingredient for this seeded recipe by attaching it to the persisted recipe.
+            existing.setRecipe(recipe);
+            Ingredient saved = ingredientRepository.save(existing);
+            // ensure recipe has the ingredient in its collection
+            recipe.getIngredients().add(saved);
+        } else {
+            // No global ingredient found — create a new ingredient and attach to persisted recipe.
+            Ingredient ing = new Ingredient();
+            ing.setIngredientName(name);
+            ing.setUnit(unit);
+            ing.setQuantity(quantity);
+            ing.setCategory(category);
+            ing.setUser(null);
+            ing.setRecipe(recipe);
+            Ingredient saved = ingredientRepository.save(ing);
+            recipe.getIngredients().add(saved);
+        }
     }
 }
