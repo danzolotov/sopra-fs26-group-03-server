@@ -52,8 +52,14 @@ public class PantryService {
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pantry not found"));
 		Ingredient ingredient = resolveIngredient(ingredientId, ingredientName, ingredientDescription, standardUnit, category);
 
+		// Determine the unit to use for the item: prefer standardUnit, fallback to ingredient.unit
+		Unit itemUnit = standardUnit != null ? standardUnit : ingredient.getUnit();
+		if (itemUnit == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unit must be provided or ingredient must have a default unit");
+		}
+
 		for (PantryItem existing : pantry.getItems()) {
-			if (existing.getIngredient().getId().equals(ingredient.getId())) {
+			if (existing.getIngredient().getId().equals(ingredient.getId()) && existing.getUnit() == itemUnit) {
 				existing.setQuantity(existing.getQuantity() + quantity);
 				pantryItemRepository.save(existing);
 				pantryItemRepository.flush();
@@ -65,6 +71,7 @@ public class PantryService {
 		PantryItem newItem = new PantryItem();
 		newItem.setPantry(pantry);
 		newItem.setIngredient(ingredient);
+		newItem.setUnit(itemUnit);
 		newItem.setQuantity(quantity);
 		pantry.getItems().add(newItem);
 		newItem = pantryItemRepository.save(newItem);
@@ -116,7 +123,7 @@ public class PantryService {
 			ingredient.setUnit(standardUnit);
 			changed = true;
 		}
-		if (ingredient.getCategory() == null && category != null) {
+		if (category != null && ingredient.getCategory() != category) {
 			ingredient.setCategory(category);
 			changed = true;
 		}
@@ -138,11 +145,18 @@ public class PantryService {
 	}
 
 	public void updateItem(Long itemId, Long ingredientId, Integer quantity) {
+		updateItem(itemId, ingredientId, quantity, null);
+	}
+
+	public void updateItem(Long itemId, Long ingredientId, Integer quantity, Unit unit) {
 		PantryItem item = getItemById(itemId);
 		Ingredient ingredient = ingredientRepository.findById(ingredientId)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ingredient not found"));
 		item.setIngredient(ingredient);
 		item.setQuantity(quantity);
+		if (unit != null) {
+			item.setUnit(unit);
+		}
 		pantryItemRepository.save(item);
 		pantryItemRepository.flush();
 	}

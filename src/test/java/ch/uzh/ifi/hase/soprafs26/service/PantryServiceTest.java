@@ -90,6 +90,7 @@ public class PantryServiceTest {
 		PantryItem existingItem = new PantryItem();
 		existingItem.setIngredient(testIngredient);
 		existingItem.setQuantity(3);
+		existingItem.setUnit(Unit.PIECE);
 		testPantry.getItems().add(existingItem);
 
 		when(pantryRepository.findById(1L)).thenReturn(Optional.of(testPantry));
@@ -106,7 +107,7 @@ public class PantryServiceTest {
 	@Test
 	public void addItemToPantry_inlineIngredient_createsIngredient() {
 		when(pantryRepository.findById(1L)).thenReturn(Optional.of(testPantry));
-		when(ingredientRepository.findByIngredientNameIgnoreCase("Carrot")).thenReturn(java.util.Collections.emptyList());
+		when(ingredientRepository.findByIngredientNameIgnoreCaseAndUnitAndUser("Carrot", Unit.GRAM, null)).thenReturn(Optional.empty());
 		when(ingredientRepository.saveAndFlush(any(Ingredient.class))).thenAnswer(invocation -> {
 			Ingredient ingredient = invocation.getArgument(0);
 			ingredient.setId(200L);
@@ -127,7 +128,8 @@ public class PantryServiceTest {
 	@Test
 	public void addItemToPantry_inlineIngredient_existingName_reusesIngredient() {
 		when(pantryRepository.findById(1L)).thenReturn(Optional.of(testPantry));
-		when(ingredientRepository.findByIngredientNameIgnoreCase("Apple")).thenReturn(java.util.Collections.singletonList(testIngredient));
+		when(ingredientRepository.findByIngredientNameIgnoreCase("Apple"))
+				.thenReturn(java.util.List.of(testIngredient));
 		when(pantryItemRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
 		PantryItem result = pantryService.addItemToPantry(1L, null, "Apple", null,

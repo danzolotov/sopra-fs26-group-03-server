@@ -3,6 +3,8 @@ package ch.uzh.ifi.hase.soprafs26.controller;
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.IngredientRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.RecipeIngredientRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.RecipeRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.RegisterPostDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,8 +38,16 @@ class SecurityIntegrationTest {
     @Autowired
     private IngredientRepository ingredientRepository;
 
+    @Autowired
+    private RecipeIngredientRepository recipeIngredientRepository;
+
+    @Autowired
+    private RecipeRepository recipeRepository;
+
     @BeforeEach
     void setup() {
+        recipeIngredientRepository.deleteAll();
+        recipeRepository.deleteAll();
         ingredientRepository.deleteAll();
         userRepository.deleteAll();
     }

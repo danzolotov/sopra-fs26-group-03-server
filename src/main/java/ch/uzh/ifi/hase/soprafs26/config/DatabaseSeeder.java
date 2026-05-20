@@ -3,6 +3,7 @@ package ch.uzh.ifi.hase.soprafs26.config;
 import ch.uzh.ifi.hase.soprafs26.constant.IngredientCategory;
 import ch.uzh.ifi.hase.soprafs26.entity.Ingredient;
 import ch.uzh.ifi.hase.soprafs26.entity.Recipe;
+import ch.uzh.ifi.hase.soprafs26.entity.RecipeIngredient;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.service.IngredientService;
 import ch.uzh.ifi.hase.soprafs26.repository.IngredientRepository;
@@ -182,29 +183,28 @@ public class DatabaseSeeder implements CommandLineRunner {
     }
 
     private void createAndAddIngredient(Recipe recipe, String name, Unit unit, Integer quantity, IngredientCategory category) {
-        // Try to find an existing global (non-user) ingredient with the same name (case-insensitive)
-        Ingredient existing = ingredientRepository.findByIngredientNameIgnoreCase(name).stream()
-                .filter(i -> i.getUser() == null && i.getRecipe() == null)
-                .findFirst()
-                .orElse(null);
+        // Find or create a global Ingredient (user == null). We do NOT set recipe on the global Ingredient.
+          Ingredient global = ingredientRepository.findByIngredientNameIgnoreCase(name).stream()
+                  .filter(i -> i.getUser() == null)
+                  .findFirst()
+                  .orElse(null);
 
-        if (existing != null) {
-            // Reuse the existing global ingredient for this seeded recipe by attaching it to the persisted recipe.
-            existing.setRecipe(recipe);
-            Ingredient saved = ingredientRepository.save(existing);
-            // ensure recipe has the ingredient in its collection
-            recipe.getIngredients().add(saved);
-        } else {
-            // No global ingredient found — create a new ingredient and attach to persisted recipe.
-            Ingredient ing = new Ingredient();
-            ing.setIngredientName(name);
-            ing.setUnit(unit);
-            ing.setQuantity(quantity);
-            ing.setCategory(category);
-            ing.setUser(null);
-            ing.setRecipe(recipe);
-            Ingredient saved = ingredientRepository.save(ing);
-            recipe.getIngredients().add(saved);
+        if (global == null) {
+            global = new Ingredient();
+            global.setIngredientName(name);
+            global.setUnit(unit);
+            global.setCategory(category);
+            global.setIngredientDescription("");
+            global.setUser(null);
+            global = ingredientRepository.save(global);
         }
+
+        RecipeIngredient ri = new RecipeIngredient();
+        ri.setRecipe(recipe);
+        ri.setIngredient(global);
+        ri.setQuantity(quantity);
+        ri.setUnit(unit);
+
+        recipe.getIngredients().add(ri);
     }
 }

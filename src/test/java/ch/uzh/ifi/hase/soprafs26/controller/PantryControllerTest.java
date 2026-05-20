@@ -115,7 +115,7 @@ public class PantryControllerTest {
 
 		given(groupService.getGroupOfUser("user-1")).willReturn(testGroup);
 		given(pantryService.getPantryByGroupId(1L)).willReturn(testPantry);
-		doNothing().when(pantryService).updateItem(eq(500L), eq(100L), eq(10));
+		doNothing().when(pantryService).updateItem(eq(500L), eq(100L), eq(10), any());
 
 		mockMvc.perform(put("/groups/me/pantry/items/{itemId}", 500L)
 						.principal(new UsernamePasswordAuthenticationToken("user-1", null))
@@ -123,7 +123,7 @@ public class PantryControllerTest {
 						.content("{\"ingredientId\":100,\"quantity\":10}"))
 				.andExpect(status().isNoContent());
 
-		verify(pantryService).updateItem(eq(500L), eq(100L), eq(10));
+		verify(pantryService).updateItem(eq(500L), eq(100L), eq(10), any());
 	}
 
 	@Test

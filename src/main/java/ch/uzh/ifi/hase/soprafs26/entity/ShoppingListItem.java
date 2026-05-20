@@ -2,6 +2,7 @@ package ch.uzh.ifi.hase.soprafs26.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import ch.uzh.ifi.hase.soprafs26.constant.Unit;
 import java.io.Serializable;
 
 @Entity
@@ -24,6 +25,10 @@ public class ShoppingListItem implements Serializable {
 	@JoinColumn(name = "ingredient_id", nullable = false)
 	private Ingredient ingredient;
 
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
+	private ch.uzh.ifi.hase.soprafs26.constant.Unit unit;
+
 	@ManyToOne
 	@JoinColumn(name = "shopping_list_id", nullable = false)
 	@JsonIgnore
@@ -37,6 +42,8 @@ public class ShoppingListItem implements Serializable {
 	public void setIsBought(Boolean isBought) { this.isBought = isBought; }
 	public Ingredient getIngredient() { return ingredient; }
 	public void setIngredient(Ingredient ingredient) { this.ingredient = ingredient; }
+	public ch.uzh.ifi.hase.soprafs26.constant.Unit getUnit() { return unit; }
+	public void setUnit(ch.uzh.ifi.hase.soprafs26.constant.Unit unit) { this.unit = unit; }
 	public ShoppingList getShoppingList() { return shoppingList; }
 	public void setShoppingList(ShoppingList shoppingList) { this.shoppingList = shoppingList; }
 }

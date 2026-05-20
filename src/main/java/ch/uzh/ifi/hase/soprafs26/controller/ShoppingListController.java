@@ -137,7 +137,7 @@ public class ShoppingListController {
 			@RequestBody ItemPutDTO dto) {
 		Group group = groupService.getGroupOfUser(auth.getName());
 		shoppingListService.getItemByIdAndVerifyGroup(itemId, group.getId());
-		shoppingListService.updateItem(itemId, dto.getIngredientId(), dto.getQuantity());
+		shoppingListService.updateItem(itemId, dto.getIngredientId(), dto.getQuantity(), dto.getUnit());
 		broadcastUpdate(group.getId());
 	}
 

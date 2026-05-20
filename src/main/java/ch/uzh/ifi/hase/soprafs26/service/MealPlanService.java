@@ -2,8 +2,6 @@ package ch.uzh.ifi.hase.soprafs26.service;
 
 import ch.uzh.ifi.hase.soprafs26.entity.*;
 import ch.uzh.ifi.hase.soprafs26.repository.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -16,9 +14,6 @@ import java.util.*;
 @Service
 @Transactional
 public class MealPlanService {
-
-    private final Logger log = LoggerFactory.getLogger(MealPlanService.class);
-
     private final MealPlanRepository mealPlanRepository;
     private final RecipeRepository recipeRepository;
     private final PantryService pantryService;
@@ -91,32 +86,34 @@ public class MealPlanService {
     public Map<Ingredient, Integer> getMissingIngredients(String userID, LocalDate start, LocalDate end) {
         List<MealPlan> plans = getMealPlans(userID, start, end);
         
-        // Group by Name since Ingredient IDs are now unique per recipe usage
-        Map<String, Integer> requiredByName = new HashMap<>();
-        Map<String, Ingredient> prototypeMap = new HashMap<>();
+          // Group by name + unit so ingredients with the same name but different units stay separate
+          Map<String, Integer> requiredByKey = new HashMap<>();
+          Map<String, Ingredient> prototypeMap = new HashMap<>();
 
-        for (MealPlan plan : plans) {
-            for (Ingredient ing : plan.getRecipe().getIngredients()) {
-                String nameKey = ing.getIngredientName().toLowerCase();
-                requiredByName.put(nameKey, requiredByName.getOrDefault(nameKey, 0) + ing.getQuantity());
-                prototypeMap.putIfAbsent(nameKey, ing);
-            }
-        }
+         for (MealPlan plan : plans) {
+             for (ch.uzh.ifi.hase.soprafs26.entity.RecipeIngredient ri : plan.getRecipe().getIngredients()) {
+                 ch.uzh.ifi.hase.soprafs26.entity.Ingredient ing = ri.getIngredient();
+                  String nameKey = buildIngredientKey(ing.getIngredientName(), ri.getUnit());
+                 int qty = ri.getQuantity() == null ? 0 : ri.getQuantity();
+                  requiredByKey.put(nameKey, requiredByKey.getOrDefault(nameKey, 0) + qty);
+                 prototypeMap.putIfAbsent(nameKey, ing);
+             }
+         }
 
-        Map<String, Integer> stockByName = new HashMap<>();
+          Map<String, Integer> stockByKey = new HashMap<>();
         groupMembershipRepository.findByUserUserID(userID).ifPresent(membership -> {
             Group group = membership.getGroup();
             Pantry pantry = pantryService.getPantryByGroupId(group.getId());
             for (PantryItem item : pantry.getItems()) {
-                String nameKey = item.getIngredient().getIngredientName().toLowerCase();
-                stockByName.put(nameKey, stockByName.getOrDefault(nameKey, 0) + item.getQuantity());
+                  String nameKey = buildIngredientKey(item.getIngredient().getIngredientName(), item.getUnit());
+                   stockByKey.put(nameKey, stockByKey.getOrDefault(nameKey, 0) + item.getQuantity());
             }
         });
 
         Map<Ingredient, Integer> missing = new HashMap<>();
-        for (Map.Entry<String, Integer> entry : requiredByName.entrySet()) {
+          for (Map.Entry<String, Integer> entry : requiredByKey.entrySet()) {
             int needed = entry.getValue();
-            int available = stockByName.getOrDefault(entry.getKey(), 0);
+              int available = stockByKey.getOrDefault(entry.getKey(), 0);
             if (needed > available) {
                 missing.put(prototypeMap.get(entry.getKey()), needed - available);
             }
@@ -132,20 +129,20 @@ public class MealPlanService {
         Map<Ingredient, Integer> missing = getMissingIngredients(userID, start, end);
         for (Map.Entry<Ingredient, Integer> entry : missing.entrySet()) {
             Ingredient reqIng = entry.getKey();
-            Ingredient baseIng = ingredientRepository.findByIngredientNameIgnoreCase(reqIng.getIngredientName())
-                .stream()
-                .findFirst()
-                .orElseGet(() -> {
-                    Ingredient ni = new Ingredient();
-                    ni.setIngredientName(reqIng.getIngredientName());
-                    ni.setUnit(reqIng.getUnit());
-                    if (reqIng.getCategory() != null) {
-                        ni.setCategory(reqIng.getCategory());
-                    } else {
-                        ni.setCategory(ch.uzh.ifi.hase.soprafs26.constant.IngredientCategory.OTHER);
-                    }
-                    return ingredientRepository.save(ni);
-                });
+              Ingredient baseIng = ingredientRepository.findByIngredientNameIgnoreCase(reqIng.getIngredientName()).stream()
+                      .filter(i -> i.getUser() == null)
+                      .findFirst()
+                      .orElseGet(() -> {
+                          Ingredient ni = new Ingredient();
+                          ni.setIngredientName(reqIng.getIngredientName());
+                          ni.setUnit(reqIng.getUnit());
+                          if (reqIng.getCategory() != null) {
+                              ni.setCategory(reqIng.getCategory());
+                          } else {
+                              ni.setCategory(ch.uzh.ifi.hase.soprafs26.constant.IngredientCategory.OTHER);
+                          }
+                          return ingredientRepository.save(ni);
+                      });
 
             if (baseIng.getCategory() == null) {
                 if (reqIng.getCategory() != null) {
@@ -159,4 +156,8 @@ public class MealPlanService {
             shoppingListService.addItemToList(list.getId(), baseIng.getId(), entry.getValue());
         }
     }
+
+  private String buildIngredientKey(String name, ch.uzh.ifi.hase.soprafs26.constant.Unit unit) {
+    return (name == null ? "" : name.toLowerCase()) + "|" + (unit == null ? "" : unit.name());
+  }
 }

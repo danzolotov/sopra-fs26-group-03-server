@@ -2,6 +2,7 @@ package ch.uzh.ifi.hase.soprafs26.service;
 
 import ch.uzh.ifi.hase.soprafs26.entity.Ingredient;
 import ch.uzh.ifi.hase.soprafs26.entity.Recipe;
+import ch.uzh.ifi.hase.soprafs26.entity.RecipeIngredient;
 import ch.uzh.ifi.hase.soprafs26.repository.IngredientRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.RecipeRepository;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.IngredientPutDTO;
@@ -42,17 +43,20 @@ public class RecipeService {
         }
 
         if (recipePutDTO.getIngredients() != null) {
-            // Remove existing ingredients completely
             existingRecipe.getIngredients().clear();
             ingredientRepository.flush();
 
-            List<Ingredient> newIngredients = new ArrayList<>();
+            List<RecipeIngredient> newRecipeIngredients = new ArrayList<>();
             for (IngredientPutDTO ingDto : recipePutDTO.getIngredients()) {
                 Ingredient newIng = DTOMapper.INSTANCE.convertIngredientPutDTOtoEntity(ingDto);
-                newIng.setRecipe(existingRecipe);
-                newIngredients.add(newIng);
+                RecipeIngredient ri = new RecipeIngredient();
+                ri.setRecipe(existingRecipe);
+                ri.setIngredient(newIng);
+                ri.setQuantity(newIng.getQuantity());
+                ri.setUnit(newIng.getUnit());
+                newRecipeIngredients.add(ri);
             }
-            existingRecipe.getIngredients().addAll(newIngredients);
+            existingRecipe.getIngredients().addAll(newRecipeIngredients);
         }
 
         return recipeRepository.saveAndFlush(existingRecipe);
