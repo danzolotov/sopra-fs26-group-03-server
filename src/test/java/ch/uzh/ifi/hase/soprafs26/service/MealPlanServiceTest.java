@@ -107,6 +107,22 @@ import static org.mockito.Mockito.*;
     }
 
     @Test
+    void createMealPlan_groupMember_setsGroupId_success() {
+        testPlan.setGroupId(null);
+        GroupMembership membership = new GroupMembership();
+        membership.setGroup(testGroup);
+        when(groupMembershipRepository.findByUserUserID("user-1")).thenReturn(Optional.of(membership));
+        when(recipeRepository.findById(1L)).thenReturn(Optional.of(testRecipe));
+        when(mealPlanRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        MealPlan result = mealPlanService.createMealPlan(testPlan);
+
+        assertNotNull(result);
+        assertEquals(testGroup.getId(), result.getGroupId());
+        verify(mealPlanRepository, times(1)).save(any());
+    }
+
+    @Test
      void createMealPlan_noRecipe_throwsBadRequest() {
         testPlan.setRecipe(null);
         assertThrows(ResponseStatusException.class, () -> mealPlanService.createMealPlan(testPlan));

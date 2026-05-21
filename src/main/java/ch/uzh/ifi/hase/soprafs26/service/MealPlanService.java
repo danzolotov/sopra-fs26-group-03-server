@@ -59,6 +59,11 @@ public class MealPlanService {
         if (plan.getRecipe() == null || plan.getRecipe().getId() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Recipe is required");
         }
+        if (plan.getGroupId() == null) {
+            groupMembershipRepository.findByUserUserID(plan.getUserID()).ifPresent(membership -> {
+                plan.setGroupId(membership.getGroup().getId());
+            });
+        }
         Recipe recipe = recipeRepository.findById(plan.getRecipe().getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe not found"));
         plan.setRecipe(recipe);
