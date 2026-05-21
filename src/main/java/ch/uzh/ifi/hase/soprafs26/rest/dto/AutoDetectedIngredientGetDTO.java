@@ -43,6 +43,14 @@ public class AutoDetectedIngredientGetDTO {
 		this.unit = unit;
 	}
 
+	public Unit getStandardUnit() {
+		return unit;
+	}
+
+	public void setStandardUnit(Unit standardUnit) {
+		this.unit = standardUnit;
+	}
+
 	public Integer getQuantity() {
 		return quantity;
 	}
@@ -59,5 +67,4 @@ public class AutoDetectedIngredientGetDTO {
 		this.category = category;
 	}
 }
-
 

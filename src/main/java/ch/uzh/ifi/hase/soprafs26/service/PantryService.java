@@ -119,7 +119,7 @@ public class PantryService {
 			ingredient.setIngredientDescription(ingredientDescription);
 			changed = true;
 		}
-		if (ingredient.getUnit() == null && standardUnit != null) {
+		if (standardUnit != null && ingredient.getUnit() != standardUnit) {
 			ingredient.setUnit(standardUnit);
 			changed = true;
 		}
@@ -156,6 +156,10 @@ public class PantryService {
 		item.setQuantity(quantity);
 		if (unit != null) {
 			item.setUnit(unit);
+			if (ingredient.getUnit() != unit) {
+				ingredient.setUnit(unit);
+				ingredientRepository.saveAndFlush(ingredient);
+			}
 		}
 		pantryItemRepository.save(item);
 		pantryItemRepository.flush();

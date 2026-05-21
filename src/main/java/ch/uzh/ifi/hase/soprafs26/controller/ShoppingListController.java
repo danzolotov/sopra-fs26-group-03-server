@@ -85,16 +85,19 @@ public class ShoppingListController {
 					continue;
 				}
 
+				ch.uzh.ifi.hase.soprafs26.constant.Unit detectedUnit =
+						detectedItem.unit() != null ? detectedItem.unit() : ingredient.getUnit();
+				String unitKey = detectedUnit == null ? "none" : detectedUnit.name();
 				String aggregationKey = ingredient.getId() != null
-						? "id:" + ingredient.getId()
-						: "name:" + ingredient.getIngredientName().toLowerCase(Locale.ROOT);
+						? "id:" + ingredient.getId() + ":unit:" + unitKey
+						: "name:" + ingredient.getIngredientName().toLowerCase(Locale.ROOT) + ":unit:" + unitKey;
 				AutoDetectedIngredientGetDTO dto = aggregated.get(aggregationKey);
 				if (dto == null) {
 					dto = new AutoDetectedIngredientGetDTO();
 					dto.setId(ingredient.getId());
 					dto.setIngredientName(ingredient.getIngredientName());
 					dto.setIngredientDescription(ingredient.getIngredientDescription());
-					dto.setUnit(ingredient.getUnit());
+					dto.setUnit(detectedUnit);
 					dto.setQuantity(0);
 
 					// Set category: either from existing ingredient or "OTHER"
