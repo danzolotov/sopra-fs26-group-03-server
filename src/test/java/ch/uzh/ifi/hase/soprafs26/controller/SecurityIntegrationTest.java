@@ -3,7 +3,6 @@ package ch.uzh.ifi.hase.soprafs26.controller;
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.IngredientRepository;
-import ch.uzh.ifi.hase.soprafs26.repository.RecipeIngredientRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.RecipeRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.RegisterPostDTO;
@@ -25,6 +24,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import ch.uzh.ifi.hase.soprafs26.repository.GroupRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.GroupMembershipRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.MealPlanRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.PantryRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.PantryItemRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.ShoppingListRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.ShoppingListItemRepository;
+
 @SpringBootTest
 @AutoConfigureMockMvc
 class SecurityIntegrationTest {
@@ -36,17 +43,41 @@ class SecurityIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
-    private IngredientRepository ingredientRepository;
+    private GroupRepository groupRepository;
 
     @Autowired
-    private RecipeIngredientRepository recipeIngredientRepository;
+    private GroupMembershipRepository groupMembershipRepository;
 
     @Autowired
     private RecipeRepository recipeRepository;
 
+    @Autowired
+    private IngredientRepository ingredientRepository;
+
+    @Autowired
+    private MealPlanRepository mealPlanRepository;
+
+    @Autowired
+    private PantryRepository pantryRepository;
+
+    @Autowired
+    private PantryItemRepository pantryItemRepository;
+
+    @Autowired
+    private ShoppingListRepository shoppingListRepository;
+
+    @Autowired
+    private ShoppingListItemRepository shoppingListItemRepository;
+
     @BeforeEach
     void setup() {
-        recipeIngredientRepository.deleteAll();
+        mealPlanRepository.deleteAll();
+        pantryItemRepository.deleteAll();
+        pantryRepository.deleteAll();
+        shoppingListItemRepository.deleteAll();
+        shoppingListRepository.deleteAll();
+        groupMembershipRepository.deleteAll();
+        groupRepository.deleteAll();
         recipeRepository.deleteAll();
         ingredientRepository.deleteAll();
         userRepository.deleteAll();

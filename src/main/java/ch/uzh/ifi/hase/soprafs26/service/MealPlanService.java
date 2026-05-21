@@ -59,6 +59,11 @@ public class MealPlanService {
         if (plan.getRecipe() == null || plan.getRecipe().getId() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Recipe is required");
         }
+        if (plan.getGroupId() == null) {
+            groupMembershipRepository.findByUserUserID(plan.getUserID()).ifPresent(membership -> {
+                plan.setGroupId(membership.getGroup().getId());
+            });
+        }
         Recipe recipe = recipeRepository.findById(plan.getRecipe().getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe not found"));
         plan.setRecipe(recipe);
@@ -91,10 +96,9 @@ public class MealPlanService {
           Map<String, Ingredient> prototypeMap = new HashMap<>();
 
          for (MealPlan plan : plans) {
-             for (ch.uzh.ifi.hase.soprafs26.entity.RecipeIngredient ri : plan.getRecipe().getIngredients()) {
-                 ch.uzh.ifi.hase.soprafs26.entity.Ingredient ing = ri.getIngredient();
-                  String nameKey = buildIngredientKey(ing.getIngredientName(), ri.getUnit());
-                 int qty = ri.getQuantity() == null ? 0 : ri.getQuantity();
+             for (ch.uzh.ifi.hase.soprafs26.entity.Ingredient ing : plan.getRecipe().getIngredients()) {
+                  String nameKey = buildIngredientKey(ing.getIngredientName(), ing.getUnit());
+                 int qty = ing.getQuantity() == null ? 0 : ing.getQuantity();
                   requiredByKey.put(nameKey, requiredByKey.getOrDefault(nameKey, 0) + qty);
                  prototypeMap.putIfAbsent(nameKey, ing);
              }
@@ -107,6 +111,19 @@ public class MealPlanService {
             for (PantryItem item : pantry.getItems()) {
                   String nameKey = buildIngredientKey(item.getIngredient().getIngredientName(), item.getUnit());
                    stockByKey.put(nameKey, stockByKey.getOrDefault(nameKey, 0) + item.getQuantity());
+            }
+            try {
+                ShoppingList shoppingList = shoppingListService.getShoppingListByGroupId(group.getId());
+                if (shoppingList != null && shoppingList.getItems() != null) {
+                    for (ShoppingListItem item : shoppingList.getItems()) {
+                        if (item.getIngredient() != null && !Boolean.TRUE.equals(item.getIsBought())) {
+                            String nameKey = buildIngredientKey(item.getIngredient().getIngredientName(), item.getUnit());
+                            stockByKey.put(nameKey, stockByKey.getOrDefault(nameKey, 0) + item.getQuantity());
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                // Ignore if no shopping list is found
             }
         });
 
