@@ -61,12 +61,7 @@ import static org.mockito.Mockito.*;
         ing1.setIngredientName("Pasta");
         ing1.setQuantity(200);
         ing1.setUnit(Unit.GRAM);
-        RecipeIngredient ri = new RecipeIngredient();
-        ri.setIngredient(ing1);
-        ri.setQuantity(200);
-        ri.setUnit(Unit.GRAM);
-        ri.setRecipe(testRecipe);
-        testRecipe.setIngredients(Collections.singletonList(ri));
+        testRecipe.setIngredients(Collections.singletonList(ing1));
 
         testPlan = new MealPlan();
         testPlan.setId(1L);

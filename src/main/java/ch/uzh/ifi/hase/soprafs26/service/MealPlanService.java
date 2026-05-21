@@ -91,10 +91,9 @@ public class MealPlanService {
           Map<String, Ingredient> prototypeMap = new HashMap<>();
 
          for (MealPlan plan : plans) {
-             for (ch.uzh.ifi.hase.soprafs26.entity.RecipeIngredient ri : plan.getRecipe().getIngredients()) {
-                 ch.uzh.ifi.hase.soprafs26.entity.Ingredient ing = ri.getIngredient();
-                  String nameKey = buildIngredientKey(ing.getIngredientName(), ri.getUnit());
-                 int qty = ri.getQuantity() == null ? 0 : ri.getQuantity();
+             for (ch.uzh.ifi.hase.soprafs26.entity.Ingredient ing : plan.getRecipe().getIngredients()) {
+                  String nameKey = buildIngredientKey(ing.getIngredientName(), ing.getUnit());
+                 int qty = ing.getQuantity() == null ? 0 : ing.getQuantity();
                   requiredByKey.put(nameKey, requiredByKey.getOrDefault(nameKey, 0) + qty);
                  prototypeMap.putIfAbsent(nameKey, ing);
              }
