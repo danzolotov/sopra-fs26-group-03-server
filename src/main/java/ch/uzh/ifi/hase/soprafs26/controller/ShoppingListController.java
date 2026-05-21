@@ -9,6 +9,8 @@ import ch.uzh.ifi.hase.soprafs26.service.PantryService;
 import ch.uzh.ifi.hase.soprafs26.service.ShoppingListAutoDetectService;
 import ch.uzh.ifi.hase.soprafs26.service.ShoppingListService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -25,6 +27,8 @@ import java.util.Map;
 
 @RestController
 public class ShoppingListController {
+
+	private final Logger log = LoggerFactory.getLogger(ShoppingListController.class);
 
 	private final ShoppingListService shoppingListService;
 	private final GroupService groupService;
@@ -92,6 +96,14 @@ public class ShoppingListController {
 					dto.setIngredientDescription(ingredient.getIngredientDescription());
 					dto.setUnit(ingredient.getUnit());
 					dto.setQuantity(0);
+
+					// Set category: either from existing ingredient or "OTHER"
+					if (ingredient.getCategory() != null) {
+						dto.setCategory(ingredient.getCategory());
+					} else {
+						dto.setCategory(ch.uzh.ifi.hase.soprafs26.constant.IngredientCategory.OTHER);
+					}
+
 					aggregated.put(aggregationKey, dto);
 				}
 				dto.setQuantity(dto.getQuantity() + detectedItem.quantity());
@@ -100,7 +112,13 @@ public class ShoppingListController {
 			return aggregated.values().stream().toList();
 		}
 		catch (IOException e) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to read uploaded image", e);
+			log.error("Failed to read uploaded image", e);
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to read uploaded image: " + e.getMessage(), e);
+		}
+		catch (Exception e) {
+			// Provide a helpful error message to the frontend so the user can understand why the POST failed
+			log.error("Auto-detect processing failed", e);
+			throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Auto-detect processing failed: " + e.getMessage(), e);
 		}
 	}
 
