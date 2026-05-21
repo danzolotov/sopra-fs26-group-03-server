@@ -236,4 +236,51 @@ class MealPlanIntegrationTest {
                 .andExpect(jsonPath("$.items[0].ingredientName").value("Spaghetti"))
                 .andExpect(jsonPath("$.items[0].quantity").value(200));
     }
+
+    @Test
+    void getMissingIngredients_excludesShoppingListItems() throws Exception {
+        // Create a meal plan for today
+        MealPlan plan = new MealPlan();
+        plan.setRecipe(testRecipe); // Needs 200g Spaghetti
+        plan.setDate(LocalDate.now());
+        plan.setMealType(MealPlan.MealType.DINNER);
+        plan.setUserID(testUser.getUserID());
+        plan.setGroupId(testGroup.getId());
+        mealPlanRepository.saveAndFlush(plan);
+
+        // Put 50g Spaghetti in the group pantry
+        Ingredient baseSpaghetti = new Ingredient();
+        baseSpaghetti.setIngredientName("Spaghetti");
+        baseSpaghetti.setUnit(Unit.GRAM);
+        baseSpaghetti.setCategory(IngredientCategory.GRAIN);
+        baseSpaghetti = ingredientRepository.saveAndFlush(baseSpaghetti);
+
+        Pantry pantry = pantryRepository.findAllByGroupId(testGroup.getId()).stream().findFirst().orElseThrow();
+        PantryItem item = new PantryItem();
+        item.setPantry(pantry);
+        item.setIngredient(baseSpaghetti);
+        item.setQuantity(50);
+        item.setUnit(Unit.GRAM);
+        pantryItemRepository.saveAndFlush(item);
+
+        // Put 150g Spaghetti in the shopping list
+        ShoppingList shoppingList = shoppingListRepository.findAllByGroupId(testGroup.getId()).stream().findFirst().orElseThrow();
+        ShoppingListItem listItem = new ShoppingListItem();
+        listItem.setShoppingList(shoppingList);
+        listItem.setIngredient(baseSpaghetti);
+        listItem.setQuantity(150);
+        listItem.setUnit(Unit.GRAM);
+        listItem.setIsBought(false);
+        shoppingListItemRepository.saveAndFlush(listItem);
+
+        MockHttpServletRequestBuilder request = get("/meal-plans/missing-ingredients")
+                .cookie(new MockCookie("AUTH_TOKEN", "valid-token"))
+                .param("startDate", LocalDate.now().minusDays(1).toString())
+                .param("endDate", LocalDate.now().plusDays(1).toString())
+                .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(0)));
+    }
 }
