@@ -140,6 +140,21 @@ public class PantryServiceTest {
 	}
 
 	@Test
+	public void addItemToPantry_existingId_overwritesIngredientStandardUnit() {
+		when(pantryRepository.findById(1L)).thenReturn(Optional.of(testPantry));
+		when(ingredientRepository.findById(100L)).thenReturn(Optional.of(testIngredient));
+		when(ingredientRepository.saveAndFlush(any(Ingredient.class))).thenAnswer(invocation -> invocation.getArgument(0));
+		when(pantryItemRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+		PantryItem result = pantryService.addItemToPantry(1L, 100L, null, null,
+				Unit.GRAM, IngredientCategory.FRUIT, 500);
+
+		assertEquals(Unit.GRAM, result.getUnit());
+		assertEquals(Unit.GRAM, result.getIngredient().getUnit());
+		verify(ingredientRepository).saveAndFlush(testIngredient);
+	}
+
+	@Test
 	public void addItemToPantry_existingId_fillsMissingCategory() {
 		Ingredient ingredientWithoutCategory = new Ingredient();
 		ingredientWithoutCategory.setId(300L);
@@ -156,6 +171,26 @@ public class PantryServiceTest {
 
 		assertEquals(IngredientCategory.VEGETABLE, result.getIngredient().getCategory());
 		verify(ingredientRepository).saveAndFlush(ingredientWithoutCategory);
+	}
+
+	@Test
+	public void updateItem_withUnit_overwritesIngredientStandardUnit() {
+		PantryItem item = new PantryItem();
+		item.setId(500L);
+		item.setPantry(testPantry);
+		item.setIngredient(testIngredient);
+		item.setQuantity(2);
+		item.setUnit(Unit.PIECE);
+
+		when(pantryItemRepository.findById(500L)).thenReturn(Optional.of(item));
+		when(ingredientRepository.findById(100L)).thenReturn(Optional.of(testIngredient));
+		when(ingredientRepository.saveAndFlush(any(Ingredient.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+		pantryService.updateItem(500L, 100L, 500, Unit.GRAM);
+
+		assertEquals(Unit.GRAM, item.getUnit());
+		assertEquals(Unit.GRAM, testIngredient.getUnit());
+		verify(ingredientRepository).saveAndFlush(testIngredient);
 	}
 
 	@Test
