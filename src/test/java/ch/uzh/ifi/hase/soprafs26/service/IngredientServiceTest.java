@@ -1,6 +1,7 @@
 package ch.uzh.ifi.hase.soprafs26.service;
 
 import ch.uzh.ifi.hase.soprafs26.constant.Unit;
+import ch.uzh.ifi.hase.soprafs26.constant.IngredientCategory;
 import ch.uzh.ifi.hase.soprafs26.entity.Ingredient;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.IngredientRepository;
@@ -44,7 +45,7 @@ class IngredientServiceTest {
 	}
 
 	@Test
-    void createIngredient_validInput_success() {
+     void createIngredient_validInput_success() {
 		when(ingredientRepository.findByIngredientNameIgnoreCaseAndUser("Milk", testUser)).thenReturn(Optional.empty());
 		when(ingredientRepository.saveAndFlush(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -68,13 +69,47 @@ class IngredientServiceTest {
 	}
 
 	@Test
-    void createIngredient_duplicateName_throwsConflict() {
+	void createIngredient_sameNameSameUnit_overwritesCategory() {
+		Ingredient existing = ingredient("Milk", 7L, testUser, Unit.LITER, IngredientCategory.FRUIT);
 		when(ingredientRepository.findByIngredientNameIgnoreCaseAndUser("Milk", testUser))
-				.thenReturn(Optional.of(testIngredient));
+				.thenReturn(Optional.of(existing));
+		when(ingredientRepository.saveAndFlush(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-		ResponseStatusException ex = assertThrows(ResponseStatusException.class,
-				() -> ingredientService.createIngredient(testIngredient));
-		assertEquals(HttpStatus.CONFLICT, ex.getStatusCode());
+		testIngredient.setCategory(IngredientCategory.DAIRY);
+		Ingredient created = ingredientService.createIngredient(testIngredient);
+
+		assertEquals(IngredientCategory.DAIRY, created.getCategory());
+		verify(ingredientRepository).saveAndFlush(existing);
+	}
+
+	@Test
+	void createIngredient_sameNameDifferentUnit_createsSeparateIngredient() {
+		when(ingredientRepository.findByIngredientNameIgnoreCaseAndUnitAndUser("Milk", Unit.MILLILITER, testUser))
+				.thenReturn(Optional.empty());
+		when(ingredientRepository.findFirstByIngredientNameIgnoreCaseAndUnitAndUserIsNull("Milk", Unit.MILLILITER))
+				.thenReturn(Optional.empty());
+		when(ingredientRepository.saveAndFlush(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+		Ingredient differentUnit = ingredient("Milk", null, testUser, Unit.MILLILITER, IngredientCategory.DAIRY);
+		Ingredient created = ingredientService.createIngredient(differentUnit);
+
+		assertEquals(Unit.MILLILITER, created.getUnit());
+		verify(ingredientRepository).saveAndFlush(differentUnit);
+	}
+
+	@Test
+	void createIngredient_globalMatchWithSameUnit_createsNewUserIngredient() {
+		Ingredient global = ingredient("Milk", 99L, null, Unit.LITER, IngredientCategory.DAIRY);
+		when(ingredientRepository.findByIngredientNameIgnoreCaseAndUnitAndUser("Milk", Unit.LITER, testUser)).thenReturn(Optional.empty());
+		when(ingredientRepository.findFirstByIngredientNameIgnoreCaseAndUnitAndUserIsNull("Milk", Unit.LITER))
+				.thenReturn(Optional.of(global));
+		when(ingredientRepository.saveAndFlush(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+		Ingredient created = ingredientService.createIngredient(testIngredient);
+
+		assertNotNull(created);
+		assertEquals(testUser, created.getUser());
+		verify(ingredientRepository).saveAndFlush(any(Ingredient.class));
 	}
 
 	@Test
@@ -114,14 +149,16 @@ class IngredientServiceTest {
 
 	@Test
 	void getIngredients_userIngredientOverridesGlobalIngredientWithSameName() {
-		Ingredient userMilk = ingredient("Milk", 1L, testUser, Unit.LITER);
-		Ingredient globalMilk = ingredient("milk", 2L, null, Unit.MILLILITER);
-		Ingredient globalEgg = ingredient("Egg", 3L, null, Unit.PIECE);
+		Ingredient userMilk = ingredient("Milk", 1L, testUser, Unit.LITER, IngredientCategory.DAIRY);
+		Ingredient globalMilk = ingredient("milk", 2L, null, Unit.MILLILITER, IngredientCategory.DAIRY);
+		Ingredient globalMilkSameUnit = ingredient("Milk", 3L, null, Unit.LITER, IngredientCategory.DAIRY);
+		Ingredient globalEgg = ingredient("Egg", 4L, null, Unit.PIECE, IngredientCategory.EGGS);
 		when(ingredientRepository.findAllByUser(testUser)).thenReturn(List.of(userMilk));
-		when(ingredientRepository.findAllByUserIsNull()).thenReturn(List.of(globalMilk, globalEgg));
+		when(ingredientRepository.findAllByUserIsNull()).thenReturn(List.of(globalMilk, globalMilkSameUnit, globalEgg));
 
 		List<Ingredient> result = ingredientService.getIngredients(testUser);
 
+		// Both global Milk variants should be excluded because user has Milk (case-insensitive match)
 		assertEquals(List.of(userMilk, globalEgg), result);
 	}
 
@@ -148,7 +185,7 @@ class IngredientServiceTest {
 
 	@Test
 	void resolveOrCreateDetectedIngredient_existingGlobalMatchById_returnsGlobalIngredient() {
-		Ingredient globalMilk = ingredient("Milk", 42L, null, Unit.MILLILITER);
+		Ingredient globalMilk = ingredient("Milk", 42L, null, Unit.MILLILITER, IngredientCategory.DAIRY);
 		when(ingredientRepository.findAll()).thenReturn(List.of(globalMilk));
 		when(ingredientRepository.findById(42L)).thenReturn(Optional.of(globalMilk));
 
@@ -174,7 +211,7 @@ class IngredientServiceTest {
 
 	@Test
 	void resolveOrCreateDetectedIngredients_deduplicatesResolvedIngredientsByName() {
-		Ingredient globalMilk = ingredient("Milk", 42L, null, Unit.MILLILITER);
+		Ingredient globalMilk = ingredient("Milk", 42L, null, Unit.MILLILITER, IngredientCategory.DAIRY);
 		when(ingredientRepository.findAll()).thenReturn(List.of(globalMilk));
 		when(ingredientRepository.findById(42L)).thenReturn(Optional.of(globalMilk));
 
@@ -183,12 +220,13 @@ class IngredientServiceTest {
 		assertEquals(List.of(globalMilk), resolved);
 	}
 
-	private Ingredient ingredient(String name, Long id, User user, Unit unit) {
+	private Ingredient ingredient(String name, Long id, User user, Unit unit, IngredientCategory category) {
 		Ingredient ingredient = new Ingredient();
 		ingredient.setId(id);
 		ingredient.setIngredientName(name);
 		ingredient.setUnit(unit);
 		ingredient.setUser(user);
+		ingredient.setCategory(category);
 		return ingredient;
 	}
 }

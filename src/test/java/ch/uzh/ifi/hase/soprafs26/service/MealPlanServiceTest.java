@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-public class MealPlanServiceTest {
+ class MealPlanServiceTest {
 
     @Mock
     private MealPlanRepository mealPlanRepository;
@@ -44,7 +44,7 @@ public class MealPlanServiceTest {
     private MealPlan testPlan;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         MockitoAnnotations.openMocks(this);
 
         testUser = new User();
@@ -61,7 +61,12 @@ public class MealPlanServiceTest {
         ing1.setIngredientName("Pasta");
         ing1.setQuantity(200);
         ing1.setUnit(Unit.GRAM);
-        testRecipe.setIngredients(Collections.singletonList(ing1));
+        RecipeIngredient ri = new RecipeIngredient();
+        ri.setIngredient(ing1);
+        ri.setQuantity(200);
+        ri.setUnit(Unit.GRAM);
+        ri.setRecipe(testRecipe);
+        testRecipe.setIngredients(Collections.singletonList(ri));
 
         testPlan = new MealPlan();
         testPlan.setId(1L);
@@ -71,7 +76,7 @@ public class MealPlanServiceTest {
     }
 
     @Test
-    public void getMealPlans_success() {
+     void getMealPlans_success() {
         LocalDate start = LocalDate.now();
         LocalDate end = LocalDate.now().plusDays(1);
         
@@ -95,7 +100,7 @@ public class MealPlanServiceTest {
     }
 
     @Test
-    public void createMealPlan_success() {
+     void createMealPlan_success() {
         when(recipeRepository.findById(1L)).thenReturn(Optional.of(testRecipe));
         when(mealPlanRepository.save(any())).thenReturn(testPlan);
 
@@ -107,13 +112,13 @@ public class MealPlanServiceTest {
     }
 
     @Test
-    public void createMealPlan_noRecipe_throwsBadRequest() {
+     void createMealPlan_noRecipe_throwsBadRequest() {
         testPlan.setRecipe(null);
         assertThrows(ResponseStatusException.class, () -> mealPlanService.createMealPlan(testPlan));
     }
 
     @Test
-    public void deleteMealPlan_owner_success() {
+     void deleteMealPlan_owner_success() {
         when(mealPlanRepository.findById(1L)).thenReturn(Optional.of(testPlan));
 
         mealPlanService.deleteMealPlan(1L, "user-1");
@@ -122,7 +127,7 @@ public class MealPlanServiceTest {
     }
 
     @Test
-    public void deleteMealPlan_groupMember_success() {
+     void deleteMealPlan_groupMember_success() {
         testPlan.setUserID("user-2");
         testPlan.setGroupId(1L);
         when(mealPlanRepository.findById(1L)).thenReturn(Optional.of(testPlan));
@@ -136,7 +141,7 @@ public class MealPlanServiceTest {
     }
 
     @Test
-    public void deleteMealPlan_unauthorized_throwsForbidden() {
+     void deleteMealPlan_unauthorized_throwsForbidden() {
         testPlan.setUserID("user-2");
         testPlan.setGroupId(2L);
         when(mealPlanRepository.findById(1L)).thenReturn(Optional.of(testPlan));
@@ -150,32 +155,34 @@ public class MealPlanServiceTest {
     }
 
     @Test
-    public void getMissingIngredients_calculationSuccess() {
-        LocalDate now = LocalDate.now();
-        when(mealPlanRepository.findByUserIDAndDateBetween(any(), any(), any()))
-                .thenReturn(new ArrayList<>(Collections.singletonList(testPlan)));
-        GroupMembership membership = new GroupMembership();
-        membership.setGroup(testGroup);
-        when(groupMembershipRepository.findByUserUserID(any())).thenReturn(Optional.of(membership));
-        
-        Pantry pantry = new Pantry();
-        PantryItem item = new PantryItem();
-        Ingredient pantryIng = new Ingredient();
-        pantryIng.setIngredientName("Pasta");
-        item.setIngredient(pantryIng);
-        item.setQuantity(50); // 150 missing (200 needed)
-        pantry.setItems(Collections.singletonList(item));
-        
-        when(pantryService.getPantryByGroupId(1L)).thenReturn(pantry);
+     void getMissingIngredients_calculationSuccess() {
+         LocalDate now = LocalDate.now();
+         when(mealPlanRepository.findByUserIDAndDateBetween(any(), any(), any()))
+                 .thenReturn(new ArrayList<>(Collections.singletonList(testPlan)));
+         GroupMembership membership = new GroupMembership();
+         membership.setGroup(testGroup);
+         when(groupMembershipRepository.findByUserUserID(any())).thenReturn(Optional.of(membership));
 
-        Map<Ingredient, Integer> missing = mealPlanService.getMissingIngredients("user-1", now, now);
+         Pantry pantry = new Pantry();
+         PantryItem item = new PantryItem();
+         Ingredient pantryIng = new Ingredient();
+         pantryIng.setIngredientName("Pasta");
+         pantryIng.setUnit(Unit.GRAM);
+         item.setIngredient(pantryIng);
+         item.setUnit(Unit.GRAM);
+         item.setQuantity(50); // 150 missing (200 needed)
+         pantry.setItems(Collections.singletonList(item));
 
-        assertEquals(1, missing.size());
-        assertEquals(150, missing.values().iterator().next());
-    }
+         when(pantryService.getPantryByGroupId(1L)).thenReturn(pantry);
+
+         Map<Ingredient, Integer> missing = mealPlanService.getMissingIngredients("user-1", now, now);
+
+         assertEquals(1, missing.size());
+         assertEquals(150, missing.values().iterator().next());
+     }
 
     @Test
-    public void syncToShoppingList_success() {
+     void syncToShoppingList_success() {
         LocalDate now = LocalDate.now();
         when(groupService.getGroupOfUser("user-1")).thenReturn(testGroup);
         GroupMembership membership = new GroupMembership();
@@ -187,7 +194,6 @@ public class MealPlanServiceTest {
         when(shoppingListService.getShoppingListByGroupId(1L)).thenReturn(list);
         
         // Mock missing ingredients
-        Ingredient reqIng = testRecipe.getIngredients().get(0);
         when(mealPlanRepository.findByUserIDAndDateBetween(any(), any(), any()))
                 .thenReturn(new ArrayList<>(Collections.singletonList(testPlan)));
         when(pantryService.getPantryByGroupId(any())).thenReturn(new Pantry()); // empty pantry
@@ -197,7 +203,9 @@ public class MealPlanServiceTest {
         baseIng.setId(10L);
         baseIng.setIngredientName("Pasta");
         when(ingredientRepository.findByIngredientNameIgnoreCase("Pasta"))
-                .thenReturn(Collections.singletonList(baseIng));
+                  .thenReturn(Collections.singletonList(baseIng));
+          when(ingredientRepository.findByIngredientNameIgnoreCaseAndUnitAndUser("Pasta", Unit.GRAM, null))
+                  .thenReturn(Optional.of(baseIng));
         when(ingredientRepository.save(any())).thenReturn(baseIng);
 
         mealPlanService.syncToShoppingList("user-1", now, now);

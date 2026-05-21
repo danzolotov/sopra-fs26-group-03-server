@@ -21,7 +21,7 @@ public class Recipe implements Serializable {
     private String description;
 
     @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    private List<Ingredient> ingredients = new ArrayList<>();
+    private List<RecipeIngredient> ingredients = new ArrayList<>();
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -29,6 +29,6 @@ public class Recipe implements Serializable {
     public void setName(String name) { this.name = name; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
-    public List<Ingredient> getIngredients() { return ingredients; }
-    public void setIngredients(List<Ingredient> ingredients) { this.ingredients = ingredients; }
+    public List<RecipeIngredient> getIngredients() { return ingredients; }
+    public void setIngredients(List<RecipeIngredient> ingredients) { this.ingredients = ingredients; }
 }

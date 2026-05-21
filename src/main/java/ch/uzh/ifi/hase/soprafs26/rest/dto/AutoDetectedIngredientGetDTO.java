@@ -1,6 +1,7 @@
 package ch.uzh.ifi.hase.soprafs26.rest.dto;
 
 import ch.uzh.ifi.hase.soprafs26.constant.Unit;
+import ch.uzh.ifi.hase.soprafs26.constant.IngredientCategory;
 
 public class AutoDetectedIngredientGetDTO {
 	private Long id;
@@ -8,6 +9,7 @@ public class AutoDetectedIngredientGetDTO {
 	private String ingredientDescription;
 	private Unit unit;
 	private Integer quantity;
+	private IngredientCategory category;
 
 	public Long getId() {
 		return id;
@@ -48,5 +50,14 @@ public class AutoDetectedIngredientGetDTO {
 	public void setQuantity(Integer quantity) {
 		this.quantity = quantity;
 	}
+
+	public IngredientCategory getCategory() {
+		return category;
+	}
+
+	public void setCategory(IngredientCategory category) {
+		this.category = category;
+	}
 }
+
 

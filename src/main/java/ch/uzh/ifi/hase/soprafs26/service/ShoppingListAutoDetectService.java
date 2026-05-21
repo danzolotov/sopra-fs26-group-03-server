@@ -45,30 +45,49 @@ public class ShoppingListAutoDetectService {
 	private String detectText(byte[] imageBytes) {
 		try (ImageAnnotatorClient vision = ImageAnnotatorClient.create()) {
 			Image image = Image.newBuilder().setContent(ByteString.copyFrom(imageBytes)).build();
-			Feature feature = Feature.newBuilder().setType(Feature.Type.TEXT_DETECTION).build();
-			AnnotateImageRequest request = AnnotateImageRequest.newBuilder()
-					.addFeatures(feature)
-					.setImage(image)
-					.build();
 
-			BatchAnnotateImagesResponse response = vision.batchAnnotateImages(List.of(request));
-			List<AnnotateImageResponse> responses = response.getResponsesList();
-			if (responses.isEmpty()) {
-				return "";
+			// Try TEXT_DETECTION first (fast). If it returns no result or an error, fall back to
+			// DOCUMENT_TEXT_DETECTION which can handle more complex JPEG encodings (progressive/CMYK) and
+			// multi-column / scanned documents.
+			String result = tryFeature(vision, image, Feature.Type.TEXT_DETECTION);
+			if (result != null && !result.isBlank()) {
+				return result;
 			}
 
-			AnnotateImageResponse firstResponse = responses.get(0);
-			if (firstResponse.hasError()) {
-				throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
-						"Vision API failed: " + firstResponse.getError().getMessage());
-			}
-
-			List<EntityAnnotation> texts = firstResponse.getTextAnnotationsList();
-			return texts.isEmpty() ? "" : texts.get(0).getDescription();
+			// Fallback
+			result = tryFeature(vision, image, Feature.Type.DOCUMENT_TEXT_DETECTION);
+			return result == null ? "" : result;
 		}
 		catch (IOException e) {
 			throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Failed to access Vision API", e);
 		}
+	}
+
+	private String tryFeature(ImageAnnotatorClient vision, Image image, Feature.Type featureType) {
+		Feature feature = Feature.newBuilder().setType(featureType).build();
+		AnnotateImageRequest request = AnnotateImageRequest.newBuilder()
+				.addFeatures(feature)
+				.setImage(image)
+				.build();
+
+		BatchAnnotateImagesResponse response = vision.batchAnnotateImages(List.of(request));
+		List<AnnotateImageResponse> responses = response.getResponsesList();
+		if (responses.isEmpty()) {
+			return "";
+		}
+
+		AnnotateImageResponse firstResponse = responses.get(0);
+		if (firstResponse.hasError()) {
+			// Don't fail immediately — return empty so caller may try other features/fallbacks
+			return "";
+		}
+
+		List<EntityAnnotation> texts = firstResponse.getTextAnnotationsList();
+		if (texts != null && !texts.isEmpty()) {
+			return texts.get(0).getDescription();
+		}
+
+		return "";
 	}
 
 	private List<DetectedShoppingItem> extractShoppingListItemsWithQuantities(String ocrText) {

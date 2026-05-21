@@ -78,11 +78,23 @@ this.ingredientRepository = ingredientRepository;
 		String normalizedName = ingredient.getIngredientName().trim();
 		ingredient.setIngredientName(normalizedName);
 
-		// Ensure uniqueness per user
-		ingredientRepository.findByIngredientNameIgnoreCaseAndUser(normalizedName, ingredient.getUser()).ifPresent(existing -> {
-			throw new ResponseStatusException(HttpStatus.CONFLICT,
-					String.format("Ingredient '%s' already exists for this user", normalizedName));
-		});
+		// Check if ingredient with same name already exists for this user
+		// If so, update it rather than creating a duplicate
+		java.util.Optional<Ingredient> existingOpt = ingredientRepository.findByIngredientNameIgnoreCaseAndUser(normalizedName, ingredient.getUser());
+		if (existingOpt.isPresent()) {
+			Ingredient existing = existingOpt.get();
+			// Update fields if provided
+			if (ingredient.getIngredientDescription() != null && !ingredient.getIngredientDescription().isEmpty()) {
+				existing.setIngredientDescription(ingredient.getIngredientDescription());
+			}
+			if (ingredient.getCategory() != null) {
+				existing.setCategory(ingredient.getCategory());
+			}
+			if (ingredient.getUnit() != null) {
+				existing.setUnit(ingredient.getUnit());
+			}
+			return ingredientRepository.saveAndFlush(existing);
+		}
 
 		return ingredientRepository.saveAndFlush(ingredient);
 	}

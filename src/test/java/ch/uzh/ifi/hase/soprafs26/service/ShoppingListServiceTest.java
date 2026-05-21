@@ -77,6 +77,7 @@ public class ShoppingListServiceTest {
 		existing.setIngredient(testIngredient);
 		existing.setQuantity(1);
 		existing.setIsBought(false);
+		existing.setUnit(Unit.PIECE);
 		testList.getItems().add(existing);
 
 		when(shoppingListRepository.findById(1L)).thenReturn(Optional.of(testList));
@@ -92,7 +93,7 @@ public class ShoppingListServiceTest {
 	@Test
 	public void addItemToList_inlineIngredient_createsIngredient() {
 		when(shoppingListRepository.findById(1L)).thenReturn(Optional.of(testList));
-		when(ingredientRepository.findByIngredientNameIgnoreCase("Yogurt")).thenReturn(java.util.Collections.emptyList());
+		when(ingredientRepository.findByIngredientNameIgnoreCaseAndUnitAndUser("Yogurt", Unit.GRAM, null)).thenReturn(Optional.empty());
 		when(ingredientRepository.saveAndFlush(any(Ingredient.class))).thenAnswer(invocation -> {
 			Ingredient ingredient = invocation.getArgument(0);
 			ingredient.setId(200L);
@@ -112,7 +113,8 @@ public class ShoppingListServiceTest {
 	@Test
 	public void addItemToList_inlineIngredient_existingName_reusesIngredient() {
 		when(shoppingListRepository.findById(1L)).thenReturn(Optional.of(testList));
-		when(ingredientRepository.findByIngredientNameIgnoreCase("Milk")).thenReturn(java.util.Collections.singletonList(testIngredient));
+		when(ingredientRepository.findByIngredientNameIgnoreCase("Milk"))
+				.thenReturn(java.util.List.of(testIngredient));
 		when(shoppingListItemRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
 		ShoppingListItem result = shoppingListService.addItemToList(1L, null, "Milk", null,
@@ -149,6 +151,7 @@ public class ShoppingListServiceTest {
 		item.setIngredient(testIngredient);
 		item.setQuantity(2);
 		item.setIsBought(false);
+		item.setUnit(Unit.PIECE);
 		testList.getItems().add(item);
 
 		Pantry testPantry = new Pantry();
@@ -161,8 +164,8 @@ public class ShoppingListServiceTest {
 		ShoppingListItem result = shoppingListService.patchItemBoughtStatus(500L, true);
 
 		assertTrue(result.getIsBought());
-		// Verify moved to pantry logic
-		verify(pantryService).addItemToPantry(20L, 100L, 2);
+		// Verify moved to pantry logic with full parameters
+		verify(pantryService).addItemToPantry(20L, 100L, "Milk", null, Unit.PIECE, IngredientCategory.DAIRY, 2);
 		// Verify removed from list
 		assertFalse(testList.getItems().contains(item));
 		verify(shoppingListItemRepository).delete(item);

@@ -67,7 +67,7 @@ public class PantryController {
 			@RequestBody PantryItemPutDTO dto) {
 		Group group = groupService.getGroupOfUser(auth.getName());
 		pantryService.getItemByIdAndVerifyGroup(itemId, group.getId());
-		pantryService.updateItem(itemId, dto.getIngredientId(), dto.getQuantity());
+		pantryService.updateItem(itemId, dto.getIngredientId(), dto.getQuantity(), dto.getUnit());
 		broadcastUpdate(group.getId());
 	}
 

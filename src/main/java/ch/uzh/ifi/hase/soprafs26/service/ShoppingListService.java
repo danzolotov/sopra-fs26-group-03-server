@@ -61,8 +61,14 @@ public class ShoppingListService {
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shopping list not found"));
 		Ingredient ingredient = resolveIngredient(ingredientId, ingredientName, ingredientDescription, standardUnit, category);
 
+		// Determine the unit to use for the item: prefer standardUnit, fallback to ingredient.unit
+		Unit itemUnit = standardUnit != null ? standardUnit : ingredient.getUnit();
+		if (itemUnit == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unit must be provided or ingredient must have a default unit");
+		}
+
 		for (ShoppingListItem existing : list.getItems()) {
-			if (existing.getIngredient().getId().equals(ingredient.getId()) && Boolean.FALSE.equals(existing.getIsBought())) {
+			if (existing.getIngredient().getId().equals(ingredient.getId()) && existing.getUnit() == itemUnit && Boolean.FALSE.equals(existing.getIsBought())) {
 				existing.setQuantity(existing.getQuantity() + quantity);
 				shoppingListItemRepository.save(existing);
 				shoppingListItemRepository.flush();
@@ -74,6 +80,7 @@ public class ShoppingListService {
 		ShoppingListItem item = new ShoppingListItem();
 		item.setShoppingList(list);
 		item.setIngredient(ingredient);
+		item.setUnit(itemUnit);
 		item.setQuantity(quantity);
 		item.setIsBought(false);
 		list.getItems().add(item);
@@ -127,7 +134,7 @@ public class ShoppingListService {
 			ingredient.setUnit(standardUnit);
 			changed = true;
 		}
-		if (ingredient.getCategory() == null && category != null) {
+		if (category != null && ingredient.getCategory() != category) {
 			ingredient.setCategory(category);
 			changed = true;
 		}
@@ -149,11 +156,18 @@ public class ShoppingListService {
 	}
 
 	public void updateItem(Long itemId, Long ingredientId, Integer quantity) {
+		updateItem(itemId, ingredientId, quantity, null);
+	}
+
+	public void updateItem(Long itemId, Long ingredientId, Integer quantity, Unit unit) {
 		ShoppingListItem item = getItemById(itemId);
 		Ingredient ingredient = ingredientRepository.findById(ingredientId)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ingredient not found"));
 		item.setIngredient(ingredient);
 		item.setQuantity(quantity);
+		if (unit != null) {
+			item.setUnit(unit);
+		}
 		shoppingListItemRepository.save(item);
 		shoppingListItemRepository.flush();
 	}
@@ -180,6 +194,10 @@ public class ShoppingListService {
 				pantryService.addItemToPantry(
 						pantry.getId(),
 						item.getIngredient().getId(),
+						item.getIngredient().getIngredientName(),
+						item.getIngredient().getIngredientDescription(),
+						item.getUnit(),
+						item.getIngredient().getCategory(),
 						item.getQuantity());
 
 				ShoppingList shoppingList = item.getShoppingList();

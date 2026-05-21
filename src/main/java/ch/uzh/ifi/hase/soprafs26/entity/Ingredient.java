@@ -36,10 +36,6 @@ public class Ingredient implements Serializable {
 	@Column(nullable = true)
 	private Integer quantity;
 
-	@ManyToOne
-	@JoinColumn(name = "recipe_id")
-	private Recipe recipe;
-
 	public Long getId() { return id; }
 	public void setId(Long id) { this.id = id; }
 	public String getIngredientName() { return ingredientName; }
@@ -50,8 +46,6 @@ public class Ingredient implements Serializable {
 	public void setUnit(Unit unit) { this.unit = unit; }
 	public Integer getQuantity() { return quantity; }
 	public void setQuantity(Integer quantity) { this.quantity = quantity; }
-	public Recipe getRecipe() { return recipe; }
-	public void setRecipe(Recipe recipe) { this.recipe = recipe; }
 
     public IngredientCategory getCategory() {
         return category;
