@@ -86,30 +86,11 @@ Deployments and release packaging are fully automated using GitHub Actions CI/CD
 ---
 
 ## 📱 Illustrations: Core User Flows
-
-### Dashboard Summary
-The central landing page showing today's meals and shopping summary.
-![Dashboard](../client/screenshots/dashboard.png)
-
-### 1. Household Onboarding
-Upon first login, users are greeted with the `GroupRequired` screen. They can input a group token to join a flat/family space, or generate a new group to invite members.
-![Household Onboarding](../client/screenshots/gating_screen.png)
-
-### 2. Pantry Management
-Users can view and update their shared pantry items. They can also scan physical lists using their phone camera (digitized instantly via OCR) or input manually with autocomplete.
-![Pantry Manual Input](../client/screenshots/pantry_manual.png)
-
-### 3. Meal Planning to Shopping List Sync
-Members schedule meals on the calendar. If ingredients are missing, they appear in the "Outstanding Ingredients" sidebar. Clicking "Add to Shopping List" appends them to the shopping list.
-![Meal Planning Calendar](../client/screenshots/meal_planning.png)
-
-### 4. Real-Time Group Shopping
-Users check off items at the grocery store. The checked-off items disappear from the shopping list and are instantly added to the pantry. Polling updates this in real-time for all household members.
-![Real-Time Group Shopping List](../client/screenshots/shopping_list.png)
-
-### 5. Recipe Discovery
-Find and save delicious recipes to cook.
-![Recipes Page](../client/screenshots/recipes.png)
+Here is how the main user flows connect across the PlateMate interface:
+1. **Join/Create Household**: A user signs up and either creates a new household group or joins an existing one using their unique group token.
+2. **Pantry Management**: Household members log the food items they have in stock. Users can also scan physical lists (digitized instantly via OCR) or input manually with autocomplete.
+3. **Meal Scheduling & Sync**: The group selects recipes from the shared Recipe Book and schedules them. The Outstanding Ingredients sidebar immediately highlights what is missing. Clicking "Add to Shopping List" queues the required ingredients.
+4. **Shopping & Replenishment**: When a user goes shopping, they check off items in the app's Shopping List. Checked-off items are instantly added to the Pantry stock, and their status updates in real-time for all other group members.
 
 ---
 
