@@ -25,7 +25,6 @@ import java.util.UUID;
  * It seeds standard test user and default recipes if they don't already exist.
  */
 @Component
-@Profile("!prod")
 public class DatabaseSeeder implements CommandLineRunner {
 
     private final Logger log = LoggerFactory.getLogger(DatabaseSeeder.class);
