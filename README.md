@@ -1,118 +1,81 @@
-# SoPra RESTful Service Template FS26
+# Platemate
+## Introduction
+The ultimate companion for modern home cooks and shared households:
+- Manage your pantry stock in real-time
+- Generate shared shopping lists automatically
+- Coordinate meal plans with your group
+- Reduce food waste and save money
 
-## Getting started with Spring Boot
--   Documentation: https://docs.spring.io/spring-boot/docs/current/reference/html/index.html
--   Guides: http://spring.io/guides
-    -   Building a RESTful Web Service: http://spring.io/guides/gs/rest-service/
-    -   Building REST services with Spring: https://spring.io/guides/tutorials/rest/
+## Technologies Used
+- **Backend Framework**: Java 17, Spring Boot, Spring Web MVC
+- **Data Persistence**: Spring Data JPA, H2 Database (local development), PostgreSQL (production/Supabase)
+- **Mapping & OCR**: MapStruct (for DTO mapping), Google Cloud Vision API (for OCR list/receipt scanning)
+- **Security & Build**: Spring Security, Gradle
+- **Testing & Quality**: JUnit 5, JaCoCo, SonarQube
+- **DevOps**: Docker, GitHub Actions, Google Cloud App Engine
 
-## Setup this Template with your IDE of choice
-Download your IDE of choice (e.g., [IntelliJ](https://www.jetbrains.com/idea/download/), [Visual Studio Code](https://code.visualstudio.com/), or [Eclipse](http://www.eclipse.org/downloads/)). Make sure Java 17 is installed on your system (for Windows, please make sure your `JAVA_HOME` environment variable is set to the correct version of Java).
+## High-Level Components
+PlateMate is structured into 4 main functional components that operate collaboratively under a group-centric model (where pantry inventory, shopping lists, and meal plans are scoped to shared groups/households):
 
-### IntelliJ
-If you consider to use IntelliJ as your IDE of choice, you can make use of your free educational license [here](https://www.jetbrains.com/community/education/#students).
-1. File -> Open... -> SoPra server template
-2. Accept to import the project as a `gradle project`
-3. To build right click the `build.gradle` file and choose `Run Build`
+1. **User & Group Management**:
+   Handles user registration, login, profile data, group creation, and membership administration. Because PlateMate is collaborative, a group aggregates multiple users, and all other entities are linked to a specific group.
+   - **Main Classes**: [UserService.java](file:///Users/karina/Local/UZH_study/SoPra/PlateMate/server/src/main/java/ch/uzh/ifi/hase/soprafs26/service/UserService.java) and [GroupService.java](file:///Users/karina/Local/UZH_study/SoPra/PlateMate/server/src/main/java/ch/uzh/ifi/hase/soprafs26/service/GroupService.java)
+2. **Pantry Inventory Manager**:
+   Allows household members to log, edit, and track ingredients currently in stock, including their quantities and expiration dates.
+   - **Main Classes**: [PantryService.java](file:///Users/karina/Local/UZH_study/SoPra/PlateMate/server/src/main/java/ch/uzh/ifi/hase/soprafs26/service/PantryService.java) and [IngredientService.java](file:///Users/karina/Local/UZH_study/SoPra/PlateMate/server/src/main/java/ch/uzh/ifi/hase/soprafs26/service/IngredientService.java)
+3. **Automated Shopping List Engine**:
+   Automatically detects and populates shopping list items when inventory quantities run low or when upcoming meals require missing ingredients. It also integrates OCR to auto-detect shopping list items from scanned receipt/list images.
+   - **Main Classes**: [ShoppingListService.java](file:///Users/karina/Local/UZH_study/SoPra/PlateMate/server/src/main/java/ch/uzh/ifi/hase/soprafs26/service/ShoppingListService.java) and [ShoppingListAutoDetectService.java](file:///Users/karina/Local/UZH_study/SoPra/PlateMate/server/src/main/java/ch/uzh/ifi/hase/soprafs26/service/ShoppingListAutoDetectService.java)
+4. **Meal Planning & Recipe Book**:
+   Coordinates schedules for weekly meals, referencing standard recipes or custom user-submitted recipes. If scheduled recipes require ingredients not present in the Pantry, the Shopping List Engine is notified to prompt the group to buy them.
+   - **Main Classes**: [MealPlanService.java](file:///Users/karina/Local/UZH_study/SoPra/PlateMate/server/src/main/java/ch/uzh/ifi/hase/soprafs26/service/MealPlanService.java) and [RecipeService.java](file:///Users/karina/Local/UZH_study/SoPra/PlateMate/server/src/main/java/ch/uzh/ifi/hase/soprafs26/service/RecipeService.java)
 
-### VS Code
-The following extensions can help you get started more easily:
--   `vmware.vscode-spring-boot`
--   `vscjava.vscode-spring-initializr`
--   `vscjava.vscode-spring-boot-dashboard`
--   `vscjava.vscode-java-pack`
+## Launch & Deployment
+Follow these steps to get started with the PlateMate server locally:
 
-**Note:** You'll need to build the project first with Gradle, just click on the `build` command in the _Gradle Tasks_ extension. Then check the _Spring Boot Dashboard_ extension if it already shows `soprafs26` and hit the play button to start the server. If it doesn't show up, restart VS Code and check again.
+### 1. Prerequisites
+- **Java SDK 17** must be installed.
+- (Optional) Nix with `direnv` can be used to automatically configure the development environment as defined in [flake.nix](file:///Users/karina/Local/UZH_study/SoPra/PlateMate/server/flake.nix) and [.envrc](file:///Users/karina/Local/UZH_study/SoPra/PlateMate/server/.envrc).
 
-## Building with Gradle
-You can use the local Gradle Wrapper to build the application.
--   macOS: `./gradlew`
--   Linux: `./gradlew`
--   Windows: `./gradlew.bat`
+### 2. External Dependencies & Database
+- **Database**: By default, local development uses a file-based **H2 database**. There is **no need** to set up or run an external database locally.
+  - The H2 console is enabled locally at `http://localhost:8080/h2-console`.
+  - JDBC URL: `jdbc:h2:file:./data/platemate` (Username: `sa`, Password: leave empty).
+- **OCR (Google Cloud Vision API)**: To run features that scan shopping lists/receipts, you must supply a Google Cloud service account key:
+  - Set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable pointing to your GCP service account JSON key file.
 
-More Information about [Gradle Wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html) and [Gradle](https://gradle.org/docs/).
+### 3. Local Commands
+- **Build the application**:
+  ```bash
+  ./gradlew build
+  ```
+- **Run the server locally** (starts on port `8080`):
+  ```bash
+  ./gradlew bootRun
+  ```
+- **Run the test suite**:
+  ```bash
+  ./gradlew test
+  ```
 
-### Build
+### 4. Releases & Deployment
+Deployments and release packaging are automated using GitHub Actions workflows:
+- **Google Cloud App Engine Deployment**: Every push to the `main` branch triggers the [main.yml](file:///Users/karina/Local/UZH_study/SoPra/PlateMate/server/.github/workflows/main.yml) workflow, which runs tests, checks quality via SonarQube, and deploys the build artifact using [app.yaml](file:///Users/karina/Local/UZH_study/SoPra/PlateMate/server/app.yaml) to Google Cloud App Engine.
+- **Dockerization**: The [dockerize.yml](file:///Users/karina/Local/UZH_study/SoPra/PlateMate/server/.github/workflows/dockerize.yml) workflow builds a containerized Docker image using the multi-stage [Dockerfile](file:///Users/karina/Local/UZH_study/SoPra/PlateMate/server/Dockerfile) and pushes it to Docker Hub on branch updates.
 
-```bash
-./gradlew build
-```
+## Illustrations: In your client repository, briefly describe and illustrate the main user flow(s)
+of your interface. How does it work (without going into too much detail)? Feel free to
+include a few screenshots of your application.
 
-### Run
+## Roadmap: The top 2-3 features that new developers who want to contribute to your project
+could add.
 
-```bash
-./gradlew bootRun
-```
+## Authors and acknowledgment.
+Marc Honegger & Karina Litvinova
 
-You can verify that the server is running by visiting `localhost:8080` in your browser.
+We also want to thank our former teammates: Dan Zolotov, Ceyda B. Dag & Kishore Sivapathasundaram
 
-### Test
+## License: Say how your project is licensed (see License guide3).
+MIT License
 
-```bash
-./gradlew test
-```
-
-### Development Mode
-You can start the backend in development mode, this will automatically trigger a new build and reload the application
-once the content of a file has been changed.
-
-Start two terminal windows and run:
-
-`./gradlew build --continuous`
-
-and in the other one:
-
-`./gradlew bootRun`
-
-If you want to avoid running all tests with every change, use the following command instead:
-
-`./gradlew build --continuous -xtest`
-
-## API Endpoint Testing with Postman
-We recommend using [Postman](https://www.getpostman.com) to test your API Endpoints.
-
-## Debugging
-If something is not working and/or you don't know what is going on. We recommend using a debugger and step-through the process step-by-step.
-
-To configure a debugger for SpringBoot's Tomcat servlet (i.e. the process you start with `./gradlew bootRun` command), do the following:
-
-1. Open Tab: **Run**/Edit Configurations
-2. Add a new Remote Configuration and name it properly
-3. Start the Server in Debug mode: `./gradlew bootRun --debug-jvm`
-4. Press `Shift + F9` or the use **Run**/Debug "Name of your task"
-5. Set breakpoints in the application where you need it
-6. Step through the process one step at a time
-
-## Testing
-Have a look here: https://www.baeldung.com/spring-boot-testing
-
-<br>
-<br>
-<br>
-
-## Docker
-
-### Introduction
-This year Docker will be used to ease the process of deployment.\
-Docker is a tool that uses containers as isolated environments, ensuring that the application runs consistently and uniformly across different devices.\
-Everything in this repository is already set up to minimize your effort for deployment.\
-All changes to the main branch will automatically be pushed to dockerhub and optimized for production.
-
-### Setup
-1. **One** member of the team should create an account on [dockerhub](https://hub.docker.com/), _incorporating the group number into the account name_, for example, `SoPra_group_XX`.\
-2. This account then creates a repository on dockerhub with the _same name as the group's Github repository name_.\
-3. Finally, the person's account details need to be added as [secrets](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-a-repository) to the group's repository:
-    - dockerhub_username (the username of the dockerhub account from step 1, for example, `SoPra_group_XX`)
-    - dockerhub_password (a generated PAT([personal access token](https://docs.docker.com/docker-hub/access-tokens/)) of the account with read and write access)
-    - dockerhub_repo_name (the name of the dockerhub repository from step 2)
-
-### Pull and run
-Once the image is created and has been successfully pushed to dockerhub, the image can be run on any machine.\
-Ensure that [Docker](https://www.docker.com/) is installed on the machine you wish to run the container.\
-First, pull (download) the image with the following command, replacing your username and repository name accordingly.
-
-```docker pull <dockerhub_username>/<dockerhub_repo_name>```
-
-Then, run the image in a container with the following command, again replacing _<dockerhub_username>_ and _<dockerhub_repo_name>_ accordingly.
-
-```docker run -p 3000:3000 <dockerhub_username>/<dockerhub_repo_name>```
+Copyright (c) 2026 Marc Honegger & Karina Litvinova
