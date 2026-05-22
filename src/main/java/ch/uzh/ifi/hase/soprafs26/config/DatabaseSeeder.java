@@ -16,6 +16,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.UUID;
@@ -25,6 +26,7 @@ import java.util.UUID;
  * It seeds standard test user and default recipes if they don't already exist.
  */
 @Component
+@Transactional
 public class DatabaseSeeder implements CommandLineRunner {
 
     private final Logger log = LoggerFactory.getLogger(DatabaseSeeder.class);
@@ -51,6 +53,23 @@ public class DatabaseSeeder implements CommandLineRunner {
         seedTestUser();
         seedRecipes();
         log.info("Database seeding process completed.");
+    }
+
+    private void seedTestUser() {
+        String testUsername = "testuser";
+        if (!userRepository.existsByUsername(testUsername)) {
+            log.info("Seeding default test user: {}...", testUsername);
+            User testUser = new User();
+            testUser.setUsername(testUsername);
+            testUser.setEmail("test@platemate.ch");
+            testUser.setPasswordHash(passwordEncoder.encode("Password123!"));
+            testUser.setToken(UUID.randomUUID().toString());
+            testUser.setStatus(UserStatus.OFFLINE);
+            userRepository.save(testUser);
+            log.info("Test user '{}' seeded successfully with password 'Password123!'.", testUsername);
+        } else {
+            log.info("Test user '{}' already exists. Skipping user seeding.", testUsername);
+        }
     }
 
     private void seedRecipes() {
