@@ -72,8 +72,20 @@ public class DatabaseSeeder implements CommandLineRunner {
     }
 
     private void seedRecipes() {
-        if (recipeRepository.count() == 0) {
-            log.info("Seeding 10 default recipes...");
+        boolean needsSeeding = recipeRepository.count() == 0;
+        if (!needsSeeding) {
+            for (Recipe recipe : recipeRepository.findAll()) {
+                if (recipe.getIngredients() == null || recipe.getIngredients().isEmpty()) {
+                    needsSeeding = true;
+                    break;
+                }
+            }
+        }
+
+        if (needsSeeding) {
+            log.info("Recipes table needs seeding/reseeding. Clearing and seeding 10 default recipes...");
+            recipeRepository.deleteAll();
+            recipeRepository.flush();
 
             // 1. Pasta Carbonara
             Recipe carbonara = createRecipe("Pasta Carbonara", "Classic Italian pasta dish with eggs, cheese, and pancetta.");
