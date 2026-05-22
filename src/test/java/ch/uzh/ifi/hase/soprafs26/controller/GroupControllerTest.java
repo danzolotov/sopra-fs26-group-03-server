@@ -22,8 +22,11 @@ import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -93,5 +96,76 @@ public class GroupControllerTest {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.id", is(1)))
 				.andExpect(jsonPath("$.name", is("Test Group")));
+	}
+
+	@Test
+	public void updateGroup_success() throws Exception {
+		given(userService.getUserById("user-1")).willReturn(testUser);
+		given(groupService.updateGroupName(any(User.class), eq("Updated Group Name"))).willReturn(testGroup);
+		testGroup.setName("Updated Group Name");
+
+		mockMvc.perform(put("/groups/me")
+						.principal(new UsernamePasswordAuthenticationToken("user-1", null))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"name\":\"Updated Group Name\"}"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.name", is("Updated Group Name")));
+	}
+
+	@Test
+	public void deleteGroup_success() throws Exception {
+		given(userService.getUserById("user-1")).willReturn(testUser);
+
+		mockMvc.perform(delete("/groups/me")
+						.principal(new UsernamePasswordAuthenticationToken("user-1", null)))
+				.andExpect(status().isNoContent());
+
+		verify(groupService).deleteGroup(testUser);
+	}
+
+	@Test
+	public void regenerateInviteCode_success() throws Exception {
+		given(userService.getUserById("user-1")).willReturn(testUser);
+		given(groupService.regenerateInviteCode(any(User.class))).willReturn(testGroup);
+
+		mockMvc.perform(post("/groups/me/invite-code")
+						.principal(new UsernamePasswordAuthenticationToken("user-1", null)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.inviteCode", is("ABC1EFG2")));
+	}
+
+	@Test
+	public void updateMemberRole_success() throws Exception {
+		given(userService.getUserById("user-1")).willReturn(testUser);
+
+		mockMvc.perform(put("/groups/me/members/{userID}", "user-2")
+						.principal(new UsernamePasswordAuthenticationToken("user-1", null))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"role\":\"ADMIN\"}"))
+				.andExpect(status().isNoContent());
+
+		verify(groupService).updateMemberRole(testUser, "user-2", ch.uzh.ifi.hase.soprafs26.constant.GroupRole.ADMIN);
+	}
+
+	@Test
+	public void removeMember_success() throws Exception {
+		given(userService.getUserById("user-1")).willReturn(testUser);
+
+		mockMvc.perform(delete("/groups/me/members/{userID}", "user-2")
+						.principal(new UsernamePasswordAuthenticationToken("user-1", null)))
+				.andExpect(status().isNoContent());
+
+		verify(groupService).removeMember(testUser, "user-2");
+	}
+
+	@Test
+	public void leaveGroup_success() throws Exception {
+		given(userService.getUserById("user-1")).willReturn(testUser);
+
+		mockMvc.perform(delete("/groups/me/members/me")
+						.principal(new UsernamePasswordAuthenticationToken("user-1", null)))
+				.andExpect(status().isNoContent());
+
+		verify(groupService).leaveGroup(testUser);
 	}
 }

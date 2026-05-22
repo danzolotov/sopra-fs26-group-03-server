@@ -180,4 +180,98 @@ public class ShoppingListServiceTest {
 		assertThrows(ResponseStatusException.class, 
 				() -> shoppingListService.getItemByIdAndVerifyGroup(500L, 20L));
 	}
+
+	@Test
+	public void getShoppingListByGroupId_success() {
+		when(shoppingListRepository.findAllByGroupId(10L)).thenReturn(java.util.List.of(testList));
+		ShoppingList result = shoppingListService.getShoppingListByGroupId(10L);
+		assertNotNull(result);
+		assertEquals(1L, result.getId());
+	}
+
+	@Test
+	public void getShoppingListByGroupId_notFound() {
+		when(shoppingListRepository.findAllByGroupId(10L)).thenReturn(java.util.Collections.emptyList());
+		assertThrows(ResponseStatusException.class, () -> shoppingListService.getShoppingListByGroupId(10L));
+	}
+
+	@Test
+	public void addItemToList_nullQuantity_throwsBadRequest() {
+		assertThrows(ResponseStatusException.class, () -> shoppingListService.addItemToList(1L, 100L, null));
+	}
+
+	@Test
+	public void addItemToList_listNotFound_throwsNotFound() {
+		when(shoppingListRepository.findById(1L)).thenReturn(Optional.empty());
+		assertThrows(ResponseStatusException.class, () -> shoppingListService.addItemToList(1L, 100L, 2));
+	}
+
+	@Test
+	public void addItemToList_ingredientNotFound_throwsNotFound() {
+		when(shoppingListRepository.findById(1L)).thenReturn(Optional.of(testList));
+		when(ingredientRepository.findById(100L)).thenReturn(Optional.empty());
+		assertThrows(ResponseStatusException.class, () -> shoppingListService.addItemToList(1L, 100L, 2));
+	}
+
+	@Test
+	public void addItemToList_emptyName_throwsBadRequest() {
+		when(shoppingListRepository.findById(1L)).thenReturn(Optional.of(testList));
+		assertThrows(ResponseStatusException.class, () -> shoppingListService.addItemToList(1L, null, "", "Desc", Unit.PIECE, IngredientCategory.DAIRY, 2));
+	}
+
+	@Test
+	public void addItemToList_nullUnitNewIngredient_throwsBadRequest() {
+		when(shoppingListRepository.findById(1L)).thenReturn(Optional.of(testList));
+		when(ingredientRepository.findByIngredientNameIgnoreCase("Yogurt")).thenReturn(java.util.Collections.emptyList());
+		assertThrows(ResponseStatusException.class, () -> shoppingListService.addItemToList(1L, null, "Yogurt", "Desc", null, IngredientCategory.DAIRY, 2));
+	}
+
+	@Test
+	public void updateItem_success() {
+		ShoppingListItem item = new ShoppingListItem();
+		item.setId(500L);
+		item.setIngredient(testIngredient);
+		item.setQuantity(2);
+		item.setUnit(Unit.PIECE);
+
+		when(shoppingListItemRepository.findById(500L)).thenReturn(Optional.of(item));
+		when(ingredientRepository.findById(100L)).thenReturn(Optional.of(testIngredient));
+
+		shoppingListService.updateItem(500L, 100L, 5, Unit.GRAM);
+
+		assertEquals(5, item.getQuantity());
+		assertEquals(Unit.GRAM, item.getUnit());
+		verify(shoppingListItemRepository).save(item);
+	}
+
+	@Test
+	public void deleteItem_success() {
+		ShoppingListItem item = new ShoppingListItem();
+		item.setId(500L);
+		item.setShoppingList(testList);
+		testList.getItems().add(item);
+
+		when(shoppingListItemRepository.findById(500L)).thenReturn(Optional.of(item));
+
+		shoppingListService.deleteItem(500L);
+
+		assertFalse(testList.getItems().contains(item));
+		verify(shoppingListItemRepository).delete(item);
+	}
+
+	@Test
+	public void patchItemBoughtStatus_setToFalse_success() {
+		ShoppingListItem item = new ShoppingListItem();
+		item.setId(500L);
+		item.setShoppingList(testList);
+		item.setIsBought(true);
+
+		when(shoppingListItemRepository.findById(500L)).thenReturn(Optional.of(item));
+		when(shoppingListItemRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+		ShoppingListItem result = shoppingListService.patchItemBoughtStatus(500L, false);
+
+		assertFalse(result.getIsBought());
+		verifyNoInteractions(pantryService);
+	}
 }
