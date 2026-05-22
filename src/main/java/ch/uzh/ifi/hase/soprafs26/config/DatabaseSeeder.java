@@ -27,6 +27,7 @@ import java.util.UUID;
  */
 @Component
 @Transactional
+@Profile("!prod")
 public class DatabaseSeeder implements CommandLineRunner {
 
     private final Logger log = LoggerFactory.getLogger(DatabaseSeeder.class);
