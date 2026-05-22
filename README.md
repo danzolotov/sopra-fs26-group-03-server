@@ -1,16 +1,17 @@
 # PlateMate — Server
 
-PlateMate is a collaborative, mobile-friendly web application designed for shared households, families, and flats to simplify pantry management, meal planning, recipe discovery, cooking, and grocery shopping. 
+PlateMate is the Spring Boot backend server for the PlateMate application, designed to simplify pantry management, meal planning, recipe discovery, cooking, and grocery shopping for shared households and families.
 
 ---
 
 ## 📖 Introduction
-Coordinating meals, grocery shopping, and pantry inventory in a shared household can be a major source of cognitive load and food waste. PlateMate acts as the ultimate companion for modern home cooks and shared households by offering:
-- **Collaborative Household Spaces**: Users can join a shared group where all members have real-time access to the same recipes, pantry inventories, and shopping requirements.
-- **Real-Time Pantry Inventory**: Maintain a precise, live list of available ingredients, reducing food waste and preventing duplicate purchases.
-- **Smart Meal Planning**: Schedule meals for the week, which automatically calculates outstanding ingredients.
-- **Automated Shopping List Sync**: Close integration between meal plans, the pantry, and shopping lists to ensure missing items are queued with a single click.
-- **Handwritten List Detection (OCR)**: Scans images of physical/handwritten lists using external image detection to translate them into digital items instantly.
+PlateMate is a collaborative web application designed for shared households to organize grocery shopping, recipe management, and meal planning. The main goal is to simplify recipe organization, shopping lists, and pantry inventories while improving coordination among household members.
+
+### Core Features
+- **Collaborative Household Spaces**: Household members share a real-time collaborative workspace with synchronized access to recipes, pantry items, and shopping lists to coordinate shopping and prevent duplicate purchases.
+- **Pantry & Shopping List Sync**: Maintain a live pantry inventory of available ingredients. Items marked as purchased on the shared shopping list are automatically transferred to the pantry.
+- **Recipe & Meal Planning**: Browse a preset collection of recipes and schedule them on the meal planner. Required ingredients for planned recipes can be automatically added to the shopping list.
+- **Handwritten List Recognition**: Supports handwritten list recognition using external APIs integrated directly within the Pantry management section, allowing users to digitize paper lists and transfer them to the pantry in one step.
 
 ---
 
@@ -85,11 +86,30 @@ Deployments and release packaging are fully automated using GitHub Actions CI/CD
 ---
 
 ## 📱 Illustrations: Core User Flows
-Here is how the main user flows connect across the PlateMate interface:
-1. **Join/Create Household**: A user signs up and either creates a new household group or joins an existing one using their unique group token.
-2. **Pantry Management**: Household members log the food items they have in stock. Users can also take a picture of a handwritten shopping list and upload it; the app uses GCP Vision OCR to automatically parse the items and quantities.
-3. **Meal Scheduling & Sync**: The group selects recipes from the shared Recipe Book and schedules them. The Outstanding Ingredients sidebar immediately highlights what is missing. Clicking "Add to Shopping List" queues the required ingredients.
-4. **Shopping & Replenishment**: When a user goes shopping, they check off items in the app's Shopping List. Checked-off items are instantly added to the Pantry stock, and their status updates in real-time for all other group members.
+
+### Dashboard Summary
+The central landing page showing today's meals and shopping summary.
+![Dashboard](../client/screenshots/dashboard.png)
+
+### 1. Household Onboarding
+Upon first login, users are greeted with the `GroupRequired` screen. They can input a group token to join a flat/family space, or generate a new group to invite members.
+![Household Onboarding](../client/screenshots/gating_screen.png)
+
+### 2. Pantry Management
+Users can view and update their shared pantry items. They can also scan physical lists using their phone camera (digitized instantly via OCR) or input manually with autocomplete.
+![Pantry Manual Input](../client/screenshots/pantry_manual.png)
+
+### 3. Meal Planning to Shopping List Sync
+Members schedule meals on the calendar. If ingredients are missing, they appear in the "Outstanding Ingredients" sidebar. Clicking "Add to Shopping List" appends them to the shopping list.
+![Meal Planning Calendar](../client/screenshots/meal_planning.png)
+
+### 4. Real-Time Group Shopping
+Users check off items at the grocery store. The checked-off items disappear from the shopping list and are instantly added to the pantry. Polling updates this in real-time for all household members.
+![Real-Time Group Shopping List](../client/screenshots/shopping_list.png)
+
+### 5. Recipe Discovery
+Find and save delicious recipes to cook.
+![Recipes Page](../client/screenshots/recipes.png)
 
 ---
 
@@ -97,13 +117,13 @@ Here is how the main user flows connect across the PlateMate interface:
 The top features planned for new developers contributing to PlateMate:
 - **Real-Time Meal Voting**: Implement a voting system within the shared household so members can vote on scheduled dinner options to simplify meal decisions.
 - **AI-Powered Pantry Suggestions**: Recommend recipes automatically based on pantry ingredients that are close to their expiration dates.
-- **Shared Expense Tracker**: Track spending habits across shopping trips and split grocery bills among household members.
+- **Adding and Editing Recipes**: Allow users to manually create, update, or customize recipe details directly from the user interface.
+- **Auto-Deduct Pantry Stock**: Automatically cross off and deduct ingredients from the pantry inventory when a scheduled recipe is marked as cooked.
 
 ---
 
 ## 👥 Authors & Acknowledgments
 - **Marc Honegger** & **Karina Litvinova**
-- Former Teammates: *Dan Zolotov, Ceyda B. Dag & Kishore Sivapathasundaram*
 
 ---
 
