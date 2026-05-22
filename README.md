@@ -85,7 +85,7 @@ Deployments and release packaging are fully automated using GitHub Actions CI/CD
 
 ---
 
-## 📱 Illustrations: Core User Flows
+## Core User Flows
 Here is how the main user flows connect across the PlateMate interface:
 1. **Join/Create Household**: A user signs up and either creates a new household group or joins an existing one using their unique group token.
 2. **Pantry Management**: Household members log the food items they have in stock. Users can also scan physical lists (digitized instantly via OCR) or input manually with autocomplete.
