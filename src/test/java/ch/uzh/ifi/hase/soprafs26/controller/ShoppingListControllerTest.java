@@ -7,6 +7,8 @@ import ch.uzh.ifi.hase.soprafs26.service.ShoppingListService;
 import ch.uzh.ifi.hase.soprafs26.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import java.util.Collections;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -131,5 +133,72 @@ public class ShoppingListControllerTest {
 				.andExpect(jsonPath("$.isBought", is(true)));
 
 		verify(shoppingListService).patchItemBoughtStatus(500L, true);
+	}
+
+	@Test
+	public void getItem_success() throws Exception {
+		given(groupService.getGroupOfUser("user-1")).willReturn(testGroup);
+		given(shoppingListService.getItemByIdAndVerifyGroup(500L, 1L)).willReturn(testItem);
+
+		mockMvc.perform(get("/groups/me/shopping-list/items/{itemId}", 500L)
+						.principal(new UsernamePasswordAuthenticationToken("user-1", null)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.id", is(500)))
+				.andExpect(jsonPath("$.ingredientName", is("Milk")));
+	}
+
+	@Test
+	public void updateItem_success() throws Exception {
+		given(groupService.getGroupOfUser("user-1")).willReturn(testGroup);
+		given(shoppingListService.getShoppingListByGroupId(1L)).willReturn(testList);
+
+		mockMvc.perform(put("/groups/me/shopping-list/items/{itemId}", 500L)
+						.principal(new UsernamePasswordAuthenticationToken("user-1", null))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"ingredientId\":100,\"quantity\":5,\"unit\":\"GRAM\"}"))
+				.andExpect(status().isNoContent());
+
+		verify(shoppingListService).updateItem(500L, 100L, 5, ch.uzh.ifi.hase.soprafs26.constant.Unit.GRAM);
+	}
+
+	@Test
+	public void deleteItem_success() throws Exception {
+		given(groupService.getGroupOfUser("user-1")).willReturn(testGroup);
+		given(shoppingListService.getShoppingListByGroupId(1L)).willReturn(testList);
+
+		mockMvc.perform(delete("/groups/me/shopping-list/items/{itemId}", 500L)
+						.principal(new UsernamePasswordAuthenticationToken("user-1", null)))
+				.andExpect(status().isNoContent());
+
+		verify(shoppingListService).deleteItem(500L);
+	}
+
+	@Test
+	public void autoDetectIngredients_success() throws Exception {
+		org.springframework.mock.web.MockMultipartFile mockFile = new org.springframework.mock.web.MockMultipartFile(
+				"file", "receipt.jpg", MediaType.IMAGE_JPEG_VALUE, "mock-image-bytes".getBytes()
+		);
+
+		User mockUser = new User();
+		mockUser.setUserID("user-1");
+		mockUser.setUsername("user-1");
+
+		ch.uzh.ifi.hase.soprafs26.service.ShoppingListAutoDetectService.DetectedShoppingItem detected =
+				new ch.uzh.ifi.hase.soprafs26.service.ShoppingListAutoDetectService.DetectedShoppingItem(
+						"Milk", 2, ch.uzh.ifi.hase.soprafs26.constant.Unit.PIECE
+				);
+
+		given(groupService.getGroupOfUser("user-1")).willReturn(testGroup);
+		given(shoppingListAutoDetectService.detectShoppingListItemsWithQuantities(org.mockito.ArgumentMatchers.any(byte[].class)))
+				.willReturn(Collections.singletonList(detected));
+		given(userService.getUserByUsername("user-1")).willReturn(mockUser);
+		given(ingredientService.resolveOrCreateDetectedIngredient("Milk", mockUser)).willReturn(testIngredient);
+
+		mockMvc.perform(multipart("/shoppings-list/auto-detect")
+						.file(mockFile)
+						.principal(new UsernamePasswordAuthenticationToken("user-1", null)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$[0].ingredientName", is("Milk")))
+				.andExpect(jsonPath("$[0].quantity", is(2)));
 	}
 }
